@@ -5,101 +5,241 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Google Maps Link Parser - by DH Studio</title>
-  <style>
+    <style>
+    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
+
     :root {
-      /* DEFAULT: Dark Mode (Deep Teal) */
-      --bg-color: #061a23;
-      --card-bg: #0b212d;
-      --primary: #38bdf8;
-      /* Light Blue */
-      --primary-hover: #0284c7;
+      /* DEFAULT: Dark Mode (Emerald & Mint) */
+      --bg-color: #02160f;
+      --bg-gradient: radial-gradient(circle at 15% 0%, rgba(16, 185, 129, 0.2), transparent 45%),
+                     radial-gradient(circle at 90% 80%, rgba(20, 184, 166, 0.15), transparent 45%),
+                     radial-gradient(circle at 80% 10%, rgba(132, 204, 22, 0.15), transparent 45%);
+      --card-bg-rgb: 9, 26, 21; 
+      --card-bg: rgba(var(--card-bg-rgb), 0.65);
+      --primary: #10b981; /* Emerald */
+      --primary-hover: #14b8a6; /* Teal/Mint */
       --text-main: #f8fafc;
       --text-muted: #94a3b8;
-      --border-color: #1e3a4c;
-      --success: #22c55e;
+      --border-color: rgba(255, 255, 255, 0.12);
+      --border-focus: #10b981;
+      --success: #34d399;
+      --danger: #ef4444;
+      --glass-blur: blur(20px);
+      --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
     }
 
     [data-theme="light"] {
-      /* Light Mode (Professional & Clean) */
-      --bg-color: #f8fafc;
-      --card-bg: #ffffff;
-      --primary: #38bdf8;
-      /* Light Blue */
-      --primary-hover: #0284c7;
-      --text-main: #1e293b;
-      --text-muted: #64748b;
-      --border-color: #e2e8f0;
+      /* Light Mode (Pastel Green) */
+      --bg-color: #f0fdf4;
+      --bg-gradient: radial-gradient(circle at 15% 0%, rgba(16, 185, 129, 0.15), transparent 45%),
+                     radial-gradient(circle at 90% 80%, rgba(20, 184, 166, 0.1), transparent 45%),
+                     radial-gradient(circle at 80% 10%, rgba(132, 204, 22, 0.1), transparent 45%);
+      --card-bg-rgb: 255, 255, 255;
+      --card-bg: rgba(var(--card-bg-rgb), 0.75);
+      --primary: #059669; /* Dark Emerald */
+      --primary-hover: #0f766e; /* Dark Teal */
+      --text-main: #064e3b;
+      --text-muted: #475569;
+      --border-color: rgba(0, 0, 0, 0.08);
+      --border-focus: #059669;
+      --success: #10b981;
+      --danger: #dc2626;
+      --glass-blur: blur(20px);
+      --glass-shadow: 0 8px 32px 0 rgba(6, 78, 59, 0.1);
     }
 
     * {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
     }
 
     body {
       background-color: var(--bg-color);
+      background-image: var(--bg-gradient);
+      background-size: 200% 200%;
+      background-attachment: fixed;
       color: var(--text-main);
       display: flex;
       justify-content: center;
-      align-items: center;
+      align-items: flex-start;
       min-height: 100vh;
       padding: 20px;
-      transition: background-color 0.3s ease, color 0.3s ease;
+      transition: background-color 0.4s ease, color 0.4s ease, background-image 0.4s ease;
+      animation: auroraMove 15s ease infinite alternate;
+    }
+
+    @keyframes auroraMove {
+      0% { background-position: 0% 0%; }
+      50% { background-position: 100% 100%; }
+      100% { background-position: 0% 100%; }
+    }
+
+    .main-wrapper {
+      display: flex;
+      flex-direction: row;
+      gap: 20px;
+      width: 100%;
+      max-width: 1400px;
+      align-items: stretch;
+      margin: 0 auto;
+      height: calc(100vh - 40px);
+    }
+
+    .container, .table-container {
+      background-color: var(--card-bg);
+      backdrop-filter: var(--glass-blur);
+      -webkit-backdrop-filter: var(--glass-blur);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: var(--glass-shadow);
+      transition: background-color 0.4s ease, border-color 0.4s ease;
     }
 
     .container {
       width: 100%;
-      max-width: 650px;
-      background-color: var(--card-bg);
-      border: 1px solid var(--border-color);
-      border-radius: 12px;
-      padding: 24px;
-      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15);
-      transition: background-color 0.3s ease, border-color 0.3s ease;
+      max-width: 500px;
+      flex-shrink: 0;
+      position: relative;
+      overflow-y: auto;
     }
 
-    .header {
+    .container::-webkit-scrollbar, .excel-table-wrapper::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    .container::-webkit-scrollbar-thumb, .excel-table-wrapper::-webkit-scrollbar-thumb {
+      background: var(--border-color);
+      border-radius: 4px;
+    }
+
+    .table-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .table-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
       margin-bottom: 20px;
     }
 
-    .header h2 {
-      font-size: 1.5rem;
+    .table-header h3 {
       color: var(--primary);
-      margin-bottom: 6px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+
+    .table-actions {
+      display: flex;
+      gap: 10px;
+    }
+
+    .excel-table-wrapper {
+      flex: 1;
+      overflow: auto;
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      background: rgba(var(--card-bg-rgb), 0.3);
+    }
+
+    table.excel-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+    }
+
+    table.excel-table th, table.excel-table td {
+      border-bottom: 1px solid var(--border-color);
+      padding: 14px 12px;
+      text-align: left;
+    }
+
+    table.excel-table th {
+      background-color: rgba(var(--card-bg-rgb), 0.95);
+      backdrop-filter: blur(10px);
+      color: var(--primary);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      box-shadow: 0 1px 0 var(--border-color);
+    }
+
+    table.excel-table tbody tr {
+      transition: background-color 0.2s ease;
+    }
+
+    table.excel-table tbody tr:hover {
+      background-color: rgba(56, 189, 248, 0.05);
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 25px;
+    }
+
+    .header-text {
+      padding-right: 40px;
+    }
+
+    .header h2 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: var(--primary);
+      margin-bottom: 8px;
+      letter-spacing: -0.5px;
     }
 
     .header p {
-      font-size: 0.875rem;
+      font-size: 0.9rem;
       color: var(--text-muted);
+      font-weight: 400;
     }
 
     .input-group {
       display: flex;
       flex-direction: column;
-      gap: 10px;
-      margin-bottom: 20px;
+      gap: 8px;
+      margin-bottom: 22px;
+    }
+
+    .input-group label {
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: var(--text-main);
+      letter-spacing: 0.3px;
     }
 
     input[type="text"],
     input[type="url"],
     input[type="password"] {
       flex: 1;
-      padding: 12px 16px;
-      border-radius: 8px;
+      padding: 14px 16px;
+      border-radius: 10px;
       border: 1px solid var(--border-color);
-      background-color: var(--bg-color);
+      background-color: rgba(var(--card-bg-rgb), 0.4);
       color: var(--text-main);
       font-size: 0.95rem;
       outline: none;
-      transition: border-color 0.2s;
+      transition: all 0.3s ease;
+      box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
     }
 
     input[type="text"]:focus,
     input[type="url"]:focus,
     input[type="password"]:focus {
-      border-color: var(--primary);
+      border-color: var(--border-focus);
+      box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.15);
+      background-color: rgba(var(--card-bg-rgb), 0.8);
     }
 
     button {
@@ -108,202 +248,204 @@
       color: #0f172a;
       font-weight: 600;
       border: none;
-      border-radius: 8px;
+      border-radius: 10px;
       cursor: pointer;
-      transition: background-color 0.2s, transform 0.1s;
-    }
-
-    button:hover {
-      background-color: var(--primary-hover);
-      color: #ffffff;
-    }
-
-    button:active {
-      transform: scale(0.98);
-    }
-
-    .loader {
-      display: none;
-      text-align: center;
-      padding: 20px;
-      color: var(--primary);
-      font-size: 0.9rem;
-    }
-
-    .results-card {
-      display: none;
-      border-top: 1px solid var(--border-color);
-      padding-top: 20px;
-      margin-top: 10px;
-    }
-
-    .field-row {
-      margin-bottom: 14px;
-    }
-
-    .field-row label {
-      display: block;
-      font-size: 0.75rem;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      color: var(--text-muted);
-      margin-bottom: 4px;
-    }
-
-    .field-content {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      background-color: var(--bg-color);
-      border: 1px solid var(--border-color);
-      border-radius: 6px;
-      padding: 8px 12px;
-      transition: background-color 0.3s ease, border-color 0.3s ease;
-    }
-
-    .field-value {
-      font-size: 0.9rem;
-      color: var(--text-main);
-      word-break: break-all;
-      margin-right: 10px;
-    }
-
-    .btn-copy {
-      background: transparent;
-      border: 1px solid var(--border-color);
-      color: var(--primary);
-      padding: 4px 10px;
-      font-size: 0.75rem;
-      border-radius: 4px;
-      flex-shrink: 0;
-    }
-
-    .btn-copy:hover {
-      background-color: var(--border-color);
-      color: var(--text-main);
-    }
-
-    .btn-delete {
-      background-color: transparent;
-      color: #ef4444;
-      /* red-500 */
-      border: 1px solid rgba(239, 68, 68, 0.3);
-      padding: 6px 12px;
-      border-radius: 6px;
-      font-size: 0.8rem;
-      font-weight: 500;
-      cursor: pointer;
-      transition: background-color 0.2s, color 0.2s;
-    }
-
-    .btn-delete:hover {
-      background-color: #ef4444;
-      color: #ffffff;
-    }
-
-    .btn-copy-all {
-      width: 100%;
-      padding: 12px;
-      background-color: transparent;
-      color: var(--primary);
-      border: 1px solid var(--primary);
-      border-radius: 8px;
-      font-weight: 600;
-      cursor: pointer;
-      margin-top: 15px;
-      transition: all 0.2s;
-    }
-
-    .btn-copy-all:hover {
-      background-color: var(--primary);
-      color: #ffffff;
-    }
-
-    .btn-process {
-      width: 100%;
-      background-color: var(--primary);
-      color: #0f172a;
-      font-weight: 600;
-      border: none;
-      border-radius: 8px;
-      padding: 12px;
-      cursor: pointer;
-      transition: background-color 0.2s;
-    }
-
-    .btn-process:hover {
-      background-color: var(--primary-hover);
-      color: #ffffff;
-    }
-
-    .btn-send-sheets {
-      width: 100%;
-      margin-top: 10px;
-      background-color: #10b981;
-      color: white;
-      padding: 12px 20px;
-      font-weight: 600;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      transition: background-color 0.2s, transform 0.1s;
-    }
-
-    .btn-send-sheets:hover:not(:disabled) {
-      background-color: #059669;
-    }
-
-    .btn-send-sheets:disabled {
-      background-color: #374151;
-      cursor: not-allowed;
-      color: #9ca3af;
-    }
-
-    .btn-full-dark {
-      width: 100%;
-      padding: 14px;
-      background-color: var(--border-color);
-      color: var(--text-main);
-      font-weight: 600;
-      font-size: 1rem;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      transition: background-color 0.2s, transform 0.1s;
+      transition: all 0.2s ease;
       display: flex;
       justify-content: center;
       align-items: center;
       gap: 8px;
     }
 
-    .btn-full-dark:hover {
-      background-color: var(--text-muted);
+    button:hover {
+      background-color: var(--primary-hover);
       color: #ffffff;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(56, 189, 248, 0.2);
+    }
+
+    button:active {
+      transform: translateY(1px);
+      box-shadow: none;
+    }
+
+    .btn-copy {
+      background: transparent;
+      border: 1px solid var(--border-color);
+      color: var(--primary);
+      padding: 8px 14px;
+      font-size: 0.8rem;
+      border-radius: 8px;
+      flex-shrink: 0;
+    }
+
+    .btn-copy:hover {
+      background-color: rgba(56, 189, 248, 0.1);
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+
+    .btn-delete {
+      background-color: transparent;
+      color: var(--danger);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-size: 0.8rem;
+      font-weight: 600;
+    }
+
+    .btn-delete:hover {
+      background-color: var(--danger);
+      color: #ffffff;
+      border-color: var(--danger);
+      box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
+    }
+
+    .action-buttons-container {
+      display: flex;
+      gap: 10px;
+      margin-top: 15px;
+    }
+
+    .btn-process, .btn-send-sheets {
+      flex: 1;
+      width: 100%;
+    }
+
+    .btn-process {
+      background: linear-gradient(135deg, var(--primary), var(--primary-hover));
+      color: #ffffff;
+      font-size: 0.95rem;
+      padding: 14px;
+      box-shadow: 0 4px 15px rgba(56, 189, 248, 0.25);
+    }
+    .btn-process:hover {
+      box-shadow: 0 6px 20px rgba(56, 189, 248, 0.4);
+    }
+
+    .btn-send-sheets {
+      width: 100%;
+      background: linear-gradient(135deg, #10b981, #059669);
+      color: white;
+      font-size: 0.95rem;
+      padding: 14px;
+      box-shadow: 0 4px 15px rgba(16, 185, 129, 0.25);
+    }
+    .btn-send-sheets:hover {
+      box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+    }
+
+    .loader {
+      display: none;
+      text-align: center;
+      padding: 30px 20px;
+      color: var(--primary);
+      font-size: 0.9rem;
+      font-weight: 500;
+      animation: pulse 1.5s infinite ease-in-out;
+    }
+    
+    .loader-spinner {
+      border: 3px solid rgba(56, 189, 248, 0.2);
+      border-top: 3px solid var(--primary);
+      border-radius: 50%;
+      width: 28px;
+      height: 28px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 12px;
+    }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
+
+    .results-card {
+      display: none;
+      background: rgba(var(--card-bg-rgb), 0.4);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 20px;
+      margin-top: 15px;
+      animation: fadeIn 0.4s ease forwards;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .field-row {
+      margin-bottom: 16px;
+    }
+
+    .field-row label {
+      display: block;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+      font-weight: 600;
+    }
+
+    .field-content {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background-color: rgba(var(--card-bg-rgb), 0.6);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 10px 14px;
+      transition: all 0.3s ease;
+    }
+    .field-content:hover {
+      border-color: rgba(56, 189, 248, 0.4);
+      background-color: rgba(var(--card-bg-rgb), 0.8);
+    }
+
+    .field-value {
+      font-size: 0.95rem;
+      color: var(--text-main);
+      word-break: break-all;
+      margin-right: 12px;
+      font-weight: 500;
+    }
+
+    .btn-copy-all {
+      width: 100%;
+      padding: 14px;
+      background-color: rgba(56, 189, 248, 0.1);
+      color: var(--primary);
+      border: 1px dashed var(--primary);
+      border-radius: 10px;
+      font-weight: 600;
+      margin-top: 20px;
+      box-shadow: none;
+    }
+    .btn-copy-all:hover {
+      background-color: var(--primary);
+      color: #ffffff;
+      border-style: solid;
     }
 
     /* Theme Toggle Button */
     .theme-toggle-btn {
-      background: none;
+      background: rgba(var(--card-bg-rgb), 0.5);
       border: 1px solid var(--border-color);
       color: var(--text-main);
       font-size: 1.2rem;
-      padding: 6px 12px;
-      border-radius: 20px;
+      border-radius: 50%;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      transition: background-color 0.2s;
-      flex-shrink: 0;
       width: 44px;
       height: 44px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
     }
-
     .theme-toggle-btn:hover {
-      background-color: var(--border-color);
+      background: var(--border-color);
+      transform: rotate(15deg) scale(1.05);
     }
 
-    /* Modal styles */
     .modal-overlay {
       display: none;
       position: fixed;
@@ -311,82 +453,90 @@
       left: 0;
       width: 100%;
       height: 100%;
-      background: rgba(0, 0, 0, 0.6);
+      background: rgba(0, 0, 0, 0.4);
       z-index: 1000;
       justify-content: center;
       align-items: center;
-      backdrop-filter: blur(4px);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      animation: fadeIn 0.3s ease;
+    }
+
+    .modal-content {
+      width: 95%;
+      max-width: 600px;
+      max-height: 90vh;
+      border-radius: 16px;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      animation: slideUpModal 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      background-color: var(--card-bg);
+      backdrop-filter: var(--glass-blur);
+      border: 1px solid var(--border-color);
+      box-shadow: var(--glass-shadow);
+    }
+    @keyframes slideUpModal {
+      from { opacity: 0; transform: translateY(30px) scale(0.95); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
     }
 
     .toast {
       position: fixed;
-      bottom: 20px;
-      right: 20px;
+      bottom: 30px;
+      right: 30px;
       background-color: var(--success);
       color: #ffffff;
-      padding: 12px 20px;
-      border-radius: 8px;
+      padding: 14px 24px;
+      border-radius: 10px;
       font-size: 0.95rem;
-      font-weight: 500;
-      display: none;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      box-shadow: 0 10px 25px rgba(16, 185, 129, 0.4);
       z-index: 9999;
+      transform: translateY(100px);
+      opacity: 0;
+      transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s ease;
     }
-
+    .toast.show {
+      transform: translateY(0);
+      opacity: 1;
+    }
     .toast.error {
-      background-color: #ef4444;
-      /* red-500 */
+      background-color: var(--danger);
+      box-shadow: 0 10px 25px rgba(239, 68, 68, 0.4);
     }
 
-    /* Responsive Design */
-    @media (max-width: 600px) {
-      body {
-        padding: 10px;
+    @media (max-width: 1024px) {
+      .main-wrapper {
+        flex-direction: column;
+        height: auto;
       }
-
       .container {
-        padding: 16px;
+        max-width: 100%;
+        overflow-y: visible;
       }
+      .table-container {
+        height: 600px;
+      }
+    }
 
-      .header {
-        flex-direction: column;
-        gap: 12px;
-      }
-
-      .header h2 {
-        font-size: 1.25rem;
-      }
-
-      .theme-toggle-btn {
-        position: absolute;
-        top: 15px;
-        right: 15px;
-      }
-
-      .input-row {
-        flex-wrap: wrap;
-      }
-
-      .input-row>input {
-        min-width: 100%;
-        margin-bottom: 8px !important;
-      }
-
-      .input-row>button {
-        flex: 1;
-      }
-
-      .action-buttons-container {
-        flex-direction: column;
-        gap: 10px !important;
-      }
-
-      .action-buttons-container>button {
-        width: 100%;
-        margin: 0 !important;
-      }
+    @media (max-width: 600px) {
+      body { padding: 12px; }
+      .container, .table-container { padding: 16px; }
+      .header { flex-direction: column; gap: 12px; }
+      .header-text { padding-right: 0; }
+      .theme-toggle-btn { position: absolute; top: 16px; right: 16px; }
+      .input-row { flex-wrap: wrap; }
+      .input-row > input { min-width: 100%; margin-bottom: 10px !important; }
+      .input-row > button { flex: 1; }
+      .action-buttons-container { flex-direction: column !important; }
     }
   </style>
+  <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
 </head>
 
 <body>
@@ -413,9 +563,10 @@
     });
   </script>
 
-  <div class="container" style="position: relative;">
-    <div class="header" style="display: flex; justify-content: space-between; align-items: flex-start;">
-      <div style="padding-right: 40px;">
+  <div class="main-wrapper">
+    <div class="container">
+    <div class="header">
+      <div class="header-text">
         <h2>Google Maps Link Parser - by DH Studio</h2>
         <p>Ekstrak Nama Tempat, Alamat, dan Koordinat Presisi</p>
       </div>
@@ -439,48 +590,7 @@
       </div>
     </div>
 
-    <!-- 2. Google Sheet URL Config -->
-    <div class="input-group">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
-        <label for="sheets-url-input" style="margin: 0; font-weight: 500;">Google Sheet URL <span
-            style="font-size: 0.8em; font-weight:normal; color:#94a3b8;">(Disimpan otomatis)</span></label>
-        <a href="#" onclick="openSettingsModal(); return false;"
-          style="font-size: 0.85rem; color: var(--primary); text-decoration: none; display: flex; align-items: center; gap: 4px;">⚙️
-          Pengaturan Sheet</a>
-      </div>
-      <div class="input-row" style="display: flex; gap: 8px;">
-        <input type="url" id="sheets-url-input" placeholder="https://script.google.com/macros/s/AKfy..."
-          style="flex: 1; margin: 0;" oninput="autoSaveSheetsUrl()" />
-        <button class="btn-copy" onclick="pasteSheetsUrl()" style="padding: 0 15px; cursor: pointer;">Paste</button>
-        <button class="btn-delete" onclick="resetSheetsUrl()">Hapus</button>
-      </div>
-      <div style="margin-top: 6px; font-size: 0.85rem; color: var(--text-muted);">
-        Bagaimana cara mendapatkan URL-nya? <a href="#" onclick="openSheetUrlModal(); return false;"
-          style="color: var(--primary); text-decoration: none;">Klik disini</a>
-      </div>
 
-      <button id="btn-check-sheets" class="btn-full-dark" onclick="checkSheetsTab()"
-        style="margin-top: 10px; padding: 10px; font-size: 0.95rem;">
-        <span style="font-size: 1.2em;">🔄</span> Cek Tab / Sheet
-      </button>
-
-      <div id="tab-selection-container"
-        style="display: none; flex-direction: column; margin-top: 15px; padding-top: 15px; border-top: 1px dashed var(--border-color);">
-        <label id="tab-selection-label" for="select-sheet-name"
-          style="font-size: 0.95rem; display: block; margin-bottom: 8px;">Pilih Tab Tujuan</label>
-        <select id="select-sheet-name"
-          style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid var(--border-color); background-color: var(--bg-color); color: var(--text-main); font-size: 0.95rem; outline: none; margin-bottom: 8px; appearance: none; background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23FFFFFF%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E'); background-repeat: no-repeat; background-position: right 1rem top 50%; background-size: 0.65rem auto;">
-        </select>
-        <div id="sheets-status-text-bottom" style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 15px;">✓ 0 tab ditemukan.</div>
-        
-        <div style="display: flex; gap: 8px;">
-          <button id="btn-print-columns" class="btn-process" onclick="printStandardColumns()" style="flex: 1; padding: 10px; font-size: 0.9rem;">🖨️ Cetak di Tab Ini</button>
-          <button id="btn-print-all-columns" class="btn-process" onclick="printToAllTabs()" style="flex: 1; padding: 10px; font-size: 0.9rem; background-color: #6366f1;">📑 Cetak ke Semua Tab</button>
-        </div>
-      </div>
-    </div>
-
-    <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 25px 0;" />
 
     <!-- 3. Google Maps Link Input -->
     <div class="input-group">
@@ -493,14 +603,14 @@
       </div>
     </div>
 
-    <div class="action-buttons-container" style="display: flex; gap: 10px; margin-top: 15px;">
-      <button class="btn-process" onclick="parseGmapsLink()" style="flex: 1;">Proses Link</button>
-      <button id="btn-confirm-send" class="btn-send-sheets" onclick="sendToSheets()"
-        style="flex: 1; margin-top: 0;">Kirim Data ke Sheet</button>
+    <div class="action-buttons-container">
+      <button class="btn-process" onclick="parseGmapsLink()">Proses Link</button>
+      <button id="btn-confirm-send" class="btn-send-sheets" onclick="addToTable()">Tambahkan ke Tabel</button>
     </div>
 
     <div id="loader" class="loader">
-      ⏳ Membaca koordinat dan menghubungi Google API...
+      <div class="loader-spinner"></div>
+      Membaca koordinat & menghubungi Google API...
     </div>
 
     <div id="resultsCard" class="results-card">
@@ -546,33 +656,48 @@
 
       <button class="btn-copy-all" onclick="copyAllFormatted()">📋 COPY SEMUA FORMAT REKAP</button>
     </div>
-  </div>
+  </div> <!-- /container -->
+
+  <!-- RIGHT PANEL: Data Table -->
+  <div class="table-container">
+    <div class="table-header">
+      <h3 style="margin: 0; font-size: 1.1rem; color: var(--text-main);">Data Tabel Excel</h3>
+      <div class="table-actions" style="display: flex; gap: 10px; align-items: center;">
+        <input type="text" id="exportFileName" placeholder="Nama File (Wajib)" style="padding: 8px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-color); color: var(--text-main); font-size: 0.85rem; width: 160px; outline: none;">
+        <button class="btn-process" onclick="exportToExcel()" style="padding: 8px 15px; font-size: 0.85rem; width: auto; background-color: #10b981; color: white;">Export ke Excel (.xlsx)</button>
+        <button class="btn-delete" onclick="clearTable()" style="padding: 8px 15px; background-color: transparent; border: 1px solid #ef4444;">Bersihkan</button>
+      </div>
+    </div>
+    <div class="excel-table-wrapper">
+      <table class="excel-table" id="dataTable">
+        <thead>
+          <tr>
+            <th>No</th>
+            <th>Nama Tempat</th>
+            <th>Alamat Lengkap</th>
+            <th>Link Google Maps</th>
+            <th>Latitude</th>
+            <th>Longitude</th>
+            <th>Aksi</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody">
+          <!-- Data rows will go here -->
+        </tbody>
+      </table>
+    </div>
+  </div> <!-- /table-container -->
+</div> <!-- /main-wrapper -->
 
   <div id="toast" class="toast">Teks berhasil disalin!</div>
 
-  <!-- Settings Modal (Popup) -->
-  <div id="settings-modal"
-    style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.75); z-index:9999; justify-content:center; align-items:center;">
-    <div
-      style="background:var(--bg-color); width:95%; max-width:900px; height:90vh; border-radius:12px; position:relative; display:flex; flex-direction:column; overflow:hidden; border:1px solid var(--border-color); box-shadow:0 10px 25px rgba(0,0,0,0.5);">
-      <div
-        style="padding:15px 20px; border-bottom:1px solid var(--border-color); display:flex; justify-content:space-between; align-items:center; background-color: var(--bg-color); transition: background-color 0.3s ease;">
-        <h3 style="margin:0; font-size:1.1rem; color: var(--text-main);">⚙️ Pengaturan Sheet</h3>
-        <button onclick="closeSettingsModal()"
-          style="background:none; border:none; color:var(--text-main); font-size:1.5rem; cursor:pointer; padding:0; line-height:1;">&times;</button>
-      </div>
-      <iframe id="settings-iframe" src="pengaturan.html?v=6"
-        style="width:100%; height:100%; border:none; flex-grow:1; background-color:var(--bg-color); transition: background-color 0.3s ease;"></iframe>
-    </div>
-  </div>
+
 
   <!-- API Key Instructions Modal -->
   <div id="apikey-modal"
     style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.75); z-index:9999; justify-content:center; align-items:center;">
-    <div
-      style="background:var(--card-bg); width:95%; max-width:600px; max-height:90vh; border-radius:12px; position:relative; display:flex; flex-direction:column; overflow:hidden; border:1px solid var(--border-color); box-shadow:0 10px 25px rgba(0,0,0,0.5); transition: background-color 0.3s ease, border-color 0.3s ease;">
-      <div
-        style="padding:15px 20px; border-bottom:1px solid var(--border-color); display:flex; justify-content:space-between; align-items:center; background-color: var(--bg-color); transition: background-color 0.3s ease;">
+    <div class="modal-content">
+      <div style="padding:15px 20px; border-bottom:1px solid var(--border-color); display:flex; justify-content:space-between; align-items:center; background-color: rgba(var(--card-bg-rgb), 0.3); transition: background-color 0.3s ease;">
         <h3 style="margin:0; font-size:1.1rem; color: var(--text-main);">🔑 Petunjuk Pemasangan API Key</h3>
         <button onclick="closeApiKeyModal()"
           style="background:none; border:none; color:var(--text-main); font-size:1.5rem; cursor:pointer; padding:0; line-height:1;">&times;</button>
@@ -616,62 +741,7 @@
     </div>
   </div>
 
-  <!-- Sheet URL Instructions Modal -->
-  <div id="sheeturl-modal"
-    style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.75); z-index:9999; justify-content:center; align-items:center;">
-    <div
-      style="background:var(--card-bg); width:95%; max-width:700px; max-height:90vh; border-radius:12px; position:relative; display:flex; flex-direction:column; overflow:hidden; border:1px solid var(--border-color); box-shadow:0 10px 25px rgba(0,0,0,0.5); transition: background-color 0.3s ease, border-color 0.3s ease;">
-      <div
-        style="padding:15px 20px; border-bottom:1px solid var(--border-color); display:flex; justify-content:space-between; align-items:center; background-color: var(--bg-color); transition: background-color 0.3s ease;">
-        <h3 style="margin:0; font-size:1.1rem; color: var(--text-main);">📄 Petunjuk Pembuatan Google Sheet URL</h3>
-        <button onclick="closeSheetUrlModal()"
-          style="background:none; border:none; color:var(--text-main); font-size:1.5rem; cursor:pointer; padding:0; line-height:1;">&times;</button>
-      </div>
-      <div style="padding: 20px; overflow-y: auto; color: var(--text-main); font-size: 0.95rem; line-height: 1.6;">
-        <p style="margin-bottom: 15px;"><strong>Langkah Pertama: Membuka Google Apps Script</strong><br>
-          <span style="color: var(--text-muted);">
-            - Buka spreadsheet/Google Sheets yang sedang Anda gunakan.<br>
-            - Pada menu bar atas, klik <strong>Extensi (Extensions) > Apps Script</strong>.<br>
-            - Tab baru akan terbuka membawa Anda ke editor Google Apps Script.
-          </span>
-        </p>
 
-        <p style="margin-bottom: 15px;"><strong>Langkah 2: Menulis Kode di Code.gs</strong><br>
-          <span style="color: var(--text-muted);">
-            - Di panel sebelah kiri, Anda akan melihat daftar file. Secara default sudah ada file bernama
-            <code>Code.gs</code>.<br>
-            - Hapus kode default <code>function myFunction() { ... }</code> dan ditimpa dari hasil pada
-            <strong>Pengaturan Sheet</strong> tadi.<br>
-            - Jangan lupa simpan perubahan dengan menekan tombol <strong>Save</strong> (ikon disket / Ctrl + S).
-          </span>
-        </p>
-
-        <p style="margin-bottom: 15px;"><strong>Langkah Terakhir : Cara Mendeploy (Deployment)</strong><br>
-          <span style="color: var(--text-muted);">
-            Cara mendeploy tergantung kebutuhan Anda (apakah ingin dijadikan Web App yang bisa diakses via URL/API, atau
-            sebagai Add-on/Library). Jika Anda membutuhkan URL endpoint (misalnya untuk menerima webhook atau dipanggil
-            dari luar):<br>
-            - Di pojok kanan atas editor Apps Script, klik tombol biru <strong>Deploy > New deployment</strong>.<br>
-            - Pada jendela popup yang muncul, klik ikon roda gigi (Select type) di sebelah Select type, lalu pilih
-            <strong>Web app</strong>.<br>
-            - Isi konfigurasi Web App:<br>
-            &nbsp;&nbsp;&nbsp;&nbsp;• <strong>Description:</strong> Isi keterangan singkat (contoh: v1.0 API).<br>
-            &nbsp;&nbsp;&nbsp;&nbsp;• <strong>Execute as:</strong> Pilih <strong>Me (email Anda)</strong> (Script akan
-            berjalan menggunakan izin akun Anda).<br>
-            &nbsp;&nbsp;&nbsp;&nbsp;• <strong>Who has access:</strong><br>
-            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Pilih <strong>Anyone</strong> (Siapa saja) jika URL ini ingin bisa
-            diakses publik/API tanpa perlu login Google.<br>
-            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Atau pilih <strong>Only myself</strong> jika hanya untuk penggunaan
-            pribadi.<br>
-            - Klik tombol <strong>Deploy</strong>.<br>
-            - Jika diminta otorisasi ulang, lakukan proses izin akun google Anda.<br>
-            - Setelah selesai, Google akan memberikan Web App URL (URL akhiran /exec). <strong>Salin dan simpan URL
-              tersebut kedalam kolom URL diatas.</strong>
-          </span>
-        </p>
-      </div>
-    </div>
-  </div>
 
   <script>
     // Fungsi Toggle Tema
@@ -707,13 +777,6 @@
         document.getElementById('apiKey').value = savedKey;
       }
 
-      const savedUrl = localStorage.getItem('sheets_webapp_url');
-      if (savedUrl) {
-        document.getElementById('sheets-url-input').value = savedUrl;
-      }
-
-
-
       // Dukungan tombol Enter dan auto-save untuk input API Key
       document.getElementById('apiKey').addEventListener('input', function(e) {
         localStorage.setItem('gmaps_api_key', this.value.trim());
@@ -726,46 +789,8 @@
         }
       });
 
-      // Dukungan tombol Enter untuk input Google Sheet URL
-      document.getElementById('sheets-url-input').addEventListener('keydown', function (e) {
-        if (e.key === 'Enter') {
-          e.preventDefault();
-          checkSheetsTab();
-        }
-      });
-      
-      // Auto-append /exec jika tertinggal
-      document.getElementById('sheets-url-input').addEventListener('blur', function (e) {
-        let url = this.value.trim();
-        if (url.includes('script.google.com/macros/')) {
-          // Buang trailing slash
-          if (url.endsWith('/')) url = url.slice(0, -1);
-          // Jika tidak berakhiran /exec atau /dev (mengabaikan query params jika ada)
-          const baseUrl = url.split('?')[0];
-          if (!baseUrl.endsWith('/exec') && !baseUrl.endsWith('/dev')) {
-            url = baseUrl + '/exec';
-            this.value = url;
-            autoSaveSheetsUrl();
-          } else if (this.value !== url) {
-            // Update jika hanya menghapus trailing slash
-            this.value = url;
-            autoSaveSheetsUrl();
-          }
-        }
-      });
-
 
     });
-
-    function openSettingsModal() {
-      document.getElementById('settings-modal').style.display = 'flex';
-      document.body.style.overflow = 'hidden';
-    }
-
-    function closeSettingsModal() {
-      document.getElementById('settings-modal').style.display = 'none';
-      document.body.style.overflow = 'auto';
-    }
 
     function openApiKeyModal() {
       document.getElementById('apikey-modal').style.display = 'flex';
@@ -774,16 +799,6 @@
 
     function closeApiKeyModal() {
       document.getElementById('apikey-modal').style.display = 'none';
-      document.body.style.overflow = 'auto';
-    }
-
-    function openSheetUrlModal() {
-      document.getElementById('sheeturl-modal').style.display = 'flex';
-      document.body.style.overflow = 'hidden';
-    }
-
-    function closeSheetUrlModal() {
-      document.getElementById('sheeturl-modal').style.display = 'none';
       document.body.style.overflow = 'auto';
     }
 
@@ -822,7 +837,6 @@
       document.getElementById('resLat').textContent = '-';
       document.getElementById('resLng').textContent = '-';
       document.getElementById('resLink').textContent = '-';
-      checkSheetsButtonState();
       showToast('Kolom berhasil dibersihkan.');
     }
 
@@ -893,10 +907,9 @@
 
         // 3. Reverse Geocoding untuk mendapatkan Alamat Lengkap (Smart Caching + API)
         if (lat !== 'Tidak ditemukan' && lng !== 'Tidak ditemukan') {
-          // Membulatkan koordinat ke 4 desimal (akurasi ~11 meter) agar lebih hemat limit API
-          const roundedLat = parseFloat(lat).toFixed(4);
-          const roundedLng = parseFloat(lng).toFixed(4);
-          const cacheKey = `addr_${roundedLat}_${roundedLng}`;
+          // Memaksa penghematan API dengan cara mencatat koordinat EKSAK 100% tanpa pembulatan.
+          // Jika lokasi yang sama persis pernah dicari, sistem TIDAK AKAN menembak API lagi.
+          const cacheKey = `addr_exact_${lat}_${lng}`;
           const cachedAddress = localStorage.getItem(cacheKey);
 
           if (cachedAddress) {
@@ -964,7 +977,6 @@
 
         resultsCard.style.display = 'block';
         window.lastParsedUrl = inputUrl;
-        checkSheetsButtonState();
 
       } catch (err) {
         showToast(err.message || 'Gagal memproses link. Pastikan format URL benar.');
@@ -982,399 +994,132 @@
       }
     }
 
-    async function pasteSheetsUrl() {
-      try {
-        let text = await navigator.clipboard.readText();
-        if (text) {
-          text = text.trim();
-          if (text.includes('script.google.com/macros/')) {
-            if (text.endsWith('/')) text = text.slice(0, -1);
-            const baseUrl = text.split('?')[0];
-            if (!baseUrl.endsWith('/exec') && !baseUrl.endsWith('/dev')) {
-              text = baseUrl + '/exec';
-            }
-          }
-          document.getElementById('sheets-url-input').value = text;
-          autoSaveSheetsUrl();
-          if (text.includes('docs.google.com/spreadsheets')) {
-            showToast('Peringatan: URL yang dipaste adalah link Spreadsheet biasa. Harap gunakan Web App URL (script.google.com).', 'error');
-          } else {
-            showToast('Link Web App di-paste dari clipboard!');
-          }
-        }
-      } catch (err) {
-        showToast('Gagal mem-paste. Pastikan browser mengizinkan akses clipboard.', 'error');
-      }
-    }
 
-    function autoSaveSheetsUrl() {
-      const url = document.getElementById('sheets-url-input').value.trim();
-      if (url) {
-        localStorage.setItem('sheets_webapp_url', url);
-      } else {
-        localStorage.removeItem('sheets_webapp_url');
-      }
-      document.getElementById('tab-selection-container').style.display = 'none';
-      checkSheetsButtonState();
-    }
 
-    function resetSheetsUrl() {
-      document.getElementById('sheets-url-input').value = '';
-      localStorage.removeItem('sheets_webapp_url');
-      document.getElementById('tab-selection-container').style.display = 'none';
-      showToast('Link Google Sheets dihapus!');
-      document.getElementById('sheets-url-input').focus();
-      checkSheetsButtonState();
-    }
+    let tableData = [];
+    
+    function addToTable() {
+      const name = document.getElementById('resName').textContent;
+      const address = document.getElementById('resAddress').textContent;
+      const lat = document.getElementById('resLat').textContent;
+      const lng = document.getElementById('resLng').textContent;
+      const link = document.getElementById('resLink').textContent;
 
-    async function fetchWithTimeout(resource, options = {}) {
-      const { timeout = 60000 } = options; // Default 60 detik timeout
-      
-      const controller = new AbortController();
-      const id = setTimeout(() => controller.abort(), timeout);
-      
-      const response = await fetch(resource, {
-        ...options,
-        signal: controller.signal  
-      });
-      clearTimeout(id);
-      
-      return response;
-    }
-
-    function handleAppScriptError(err) {
-      if (err.name === 'AbortError') {
-        return "Koneksi terputus (Timeout). Proses terlalu lama, coba periksa sinyal atau klik sekali lagi.";
-      }
-      if (err.message && (err.message.includes('Unexpected token') || err.message.includes('not valid JSON') || err.message.includes('Failed to fetch'))) {
-        return "Akses Ditolak! Pastikan: 1) Link berakhiran /exec, 2) Deploy ulang (pilih 'New version'), 3) Set 'Who has access' ke 'Anyone' (Siapa saja).";
-      }
-      return err.message;
-    }
-
-    function checkSheetsButtonState() {
-      // Kept for compatibility with existing calls
-    }
-
-    async function checkSheetsTab() {
-      const url = localStorage.getItem('sheets_webapp_url');
-      if (!url) {
-        showToast('Web App URL belum diisi!', 'error');
+      if (name === '-' || name === 'Tidak ditemukan') {
+        showToast('Belum ada data lokasi yang valid diproses!', 'error');
         return;
       }
 
-      if (url.includes('docs.google.com/spreadsheets')) {
-        showToast('Error: Harap masukkan Web App URL (script.google.com/...), BUKAN link Spreadsheet biasa.', 'error');
-        return;
-      }
-
-      const btnCheck = document.getElementById('btn-check-sheets');
-      if (btnCheck.disabled) return; // Prevent double click
-      
-      const originalText = '<span style="font-size: 1.2em;">🔄</span> Cek Tab / Sheet';
-      btnCheck.disabled = true;
-      btnCheck.innerHTML = '<span style="font-size: 1.2em;">⏳</span> Mengecek...';
-
-      try {
-        const response = await fetchWithTimeout(url, {
-          method: 'POST',
-          mode: 'cors',
-          body: JSON.stringify({ action: 'getSheets' })
-        });
-
-        const data = await response.json();
-
-        const select = document.getElementById('select-sheet-name');
-        select.innerHTML = '';
-
-        if (data && data.status === 'success' && data.sheets) {
-          data.sheets.forEach(sheet => {
-            const option = document.createElement('option');
-            option.value = sheet;
-            option.textContent = sheet;
-            select.appendChild(option);
-          });
-
-          document.getElementById('tab-selection-container').style.display = 'flex';
-
-          let titleSuffix = '';
-          if (data.spreadsheetName) {
-            titleSuffix = ` (${data.spreadsheetName})`;
-          }
-          document.getElementById('tab-selection-label').textContent = `Pilih Tab Tujuan${titleSuffix}`;
-          document.getElementById('sheets-status-text-bottom').textContent = `✓ ${data.sheets.length} tab ditemukan. Pilih tab tujuan di atas.`;
-
-          btnCheck.disabled = false;
-          btnCheck.innerHTML = originalText;
-
-          showToast('Daftar tab berhasil dimuat!');
-        } else {
-          throw new Error('Format response tidak valid atau tidak ada sheet.');
-        }
-      } catch (err) {
-        console.error(err);
-        showToast('Gagal mengambil daftar sheet: ' + handleAppScriptError(err), 'error');
-        btnCheck.disabled = false;
-        btnCheck.innerHTML = originalText;
-      }
-    }
-
-    async function printStandardColumns() {
-      const url = localStorage.getItem('sheets_webapp_url');
-      const sheetName = document.getElementById('select-sheet-name').value;
-      
-      if (!url) {
-        showToast('Web App URL belum diisi!', 'error');
-        return;
-      }
-      if (!sheetName) {
-        showToast('Tab Tujuan belum dipilih!', 'error');
-        return;
-      }
-
-      const btn = document.getElementById('btn-print-columns');
-      if (btn.disabled) return; // Prevent double click
-      
-      const originalText = '🖨️ Cetak Seluruh Kolom';
-      btn.innerHTML = '⏳ Sedang Mencetak...';
-      btn.disabled = true;
-
-      // Ambil custom headers dari pengaturan jika ada, jika tidak pakai standar
-      let headersToPrint = ['Nama Tempat', 'Alamat Lengkap', 'Link Google Maps', 'Latitude', 'Longitude'];
-      try {
-        const customHeadersStr = localStorage.getItem('custom_headers');
-        if (customHeadersStr) {
-          const parsed = JSON.parse(customHeadersStr);
-          if (Array.isArray(parsed) && parsed.length > 0) {
-            headersToPrint = parsed;
-          }
-        }
-      } catch(e) {}
-
-      try {
-        const response = await fetchWithTimeout(url, {
-          method: 'POST',
-          mode: 'cors',
-          body: JSON.stringify({
-            action: 'createHeaders',
-            sheetName: sheetName,
-            headers: headersToPrint
-          })
-        });
-
-        const result = await response.json();
-        if (result && result.status === 'success') {
-          showToast('✅ Berhasil! Header kolom telah dicetak di tab: ' + sheetName);
-        } else {
-          throw new Error(result.message || 'Gagal mencetak kolom');
-        }
-      } catch (err) {
-        console.error(err);
-        showToast('Gagal mencetak kolom: ' + handleAppScriptError(err), 'error');
-      } finally {
-        btn.disabled = false;
-        btn.innerHTML = originalText;
-      }
-    }
-
-    async function printToAllTabs() {
-      const url = localStorage.getItem('sheets_webapp_url');
-      const select = document.getElementById('select-sheet-name');
-      const options = Array.from(select.options);
-      
-      if (!url) {
-        showToast('Web App URL belum diisi!', 'error');
-        return;
-      }
-      if (options.length === 0) {
-        showToast('Tidak ada tab yang ditemukan!', 'error');
-        return;
-      }
-
-      const confirmPrint = confirm(`Anda yakin ingin mencetak kolom ke SEMUA ${options.length} tab sekaligus?\n\n(Proses ini mungkin membutuhkan waktu 1-2 menit tergantung jumlah tab)`);
-      if (!confirmPrint) return;
-
-      const btnAll = document.getElementById('btn-print-all-columns');
-      const btnSingle = document.getElementById('btn-print-columns');
-      if (btnAll.disabled) return;
-      
-      const originalText = '📑 Cetak ke Semua Tab';
-      btnAll.innerHTML = `⏳ 0/${options.length}`;
-      btnAll.disabled = true;
-      btnSingle.disabled = true;
-
-      // Ambil custom headers
-      let headersToPrint = ['Nama Tempat', 'Alamat Lengkap', 'Link Google Maps', 'Latitude', 'Longitude'];
-      try {
-        const customHeadersStr = localStorage.getItem('custom_headers');
-        if (customHeadersStr) {
-          const parsed = JSON.parse(customHeadersStr);
-          if (Array.isArray(parsed) && parsed.length > 0) headersToPrint = parsed;
-        }
-      } catch(e) {}
-
-      try {
-        btnAll.innerHTML = `⏳ Memproses Semua Tab (Cepat)...`;
-        const response = await fetchWithTimeout(url, {
-          method: 'POST',
-          mode: 'cors',
-          body: JSON.stringify({
-            action: 'createHeadersAll',
-            headers: headersToPrint
-          }),
-          timeout: 60000
-        });
-        const result = await response.json();
-        
-        if (result && result.status === 'success') {
-          btnAll.disabled = false;
-          btnAll.innerHTML = originalText;
-          btnSingle.disabled = false;
-          showToast(`✅ Selesai! Berhasil mencetak kolom ke seluruh ${options.length} tab dalam sekejap.`);
-          return; // Berhasil, keluar dari fungsi
-        } else if (result && result.message === 'Unknown error') {
-          // Fallback ke mode lambat jika script belum di-update
-          console.warn("Script lama terdeteksi, beralih ke mode cetak satu-persatu.");
-        } else {
-          throw new Error(result.message || 'Unknown error');
-        }
-      } catch (err) {
-        console.error("Gagal mode cepat:", err);
-      }
-
-      // === FALLBACK MODE LAMBAT ===
-      let successCount = 0;
-      let errorCount = 0;
-
-      const delay = ms => new Promise(res => setTimeout(res, ms));
-
-      for (let i = 0; i < options.length; i++) {
-        const sheetName = options[i].value;
-        try {
-          btnAll.innerHTML = `⏳ Mode Lambat: ${i + 1}/${options.length}...`;
-          
-          const response = await fetchWithTimeout(url, {
-            method: 'POST',
-            mode: 'cors',
-            body: JSON.stringify({
-              action: 'createHeaders',
-              sheetName: sheetName,
-              headers: headersToPrint
-            }),
-            timeout: 30000 // 30s per sheet
-          });
-          const result = await response.json();
-          if (result && result.status === 'success') {
-            successCount++;
-          } else {
-            errorCount++;
-          }
-        } catch (err) {
-          console.warn(`Gagal mencetak tab ${sheetName}:`, err);
-          errorCount++;
-        }
-        
-        // Beri jeda 1.5 detik antar request
-        if (i < options.length - 1) {
-          btnAll.innerHTML = `⏳ Jeda... (${i + 1}/${options.length})`;
-          await delay(1500);
-        }
-      }
-
-      btnAll.disabled = false;
-      btnAll.innerHTML = originalText;
-      btnSingle.disabled = false;
-      
-      if (errorCount === 0) {
-        showToast(`✅ Selesai Mode Lambat! Berhasil mencetak ke ${successCount} tab.`);
-      } else {
-        showToast(`⚠️ Selesai! Berhasil: ${successCount} tab. Gagal: ${errorCount} tab. Update script Anda untuk menghindari error ini.`, 'error');
-      }
-    }
-
-    async function sendToSheets() {
-      const url = localStorage.getItem('sheets_webapp_url');
-      const sheetName = document.getElementById('select-sheet-name').value;
-
-      if (!url || !sheetName) {
-        showToast('URL atau Tab Tujuan belum dipilih!', 'error');
-        return;
-      }
-
-      if (url.includes('docs.google.com/spreadsheets')) {
-        showToast('Error: Konfigurasi URL salah. Gunakan Web App URL.', 'error');
-        return;
-      }
-
-      const hasData = document.getElementById('resName').textContent !== '-' && document.getElementById('resName').textContent !== 'Tidak ditemukan';
-      if (!hasData) {
-        showToast('Belum ada data lokasi yang diproses!', 'error');
-        return;
-      }
-
-      const btnConfirm = document.getElementById('btn-confirm-send');
-      if (btnConfirm.disabled) return; // Prevent double click
-      
-      const originalText = 'Kirim Data ke Sheet';
-      btnConfirm.disabled = true;
-      btnConfirm.textContent = 'Mengirim...';
-
-      const rowData = [
-        document.getElementById('resName').textContent,
-        document.getElementById('resAddress').textContent,
-        document.getElementById('resLink').textContent,
-        document.getElementById('resLat').textContent,
-        document.getElementById('resLng').textContent
-      ];
-
-      const resName = document.getElementById('resName').textContent;
-      const resAddress = document.getElementById('resAddress').textContent;
-      const resLink = document.getElementById('resLink').textContent;
-      const resLat = document.getElementById('resLat').textContent;
-      const resLng = document.getElementById('resLng').textContent;
-
-      const dataObj = {
-        "Business Name": resName,
-        "Place Name": resName,
-        "Nama Tempat": resName,
-        "Nama Lokasi": resName,
-        "Address": resAddress,
-        "Alamat": resAddress,
-        "Alamat Lengkap": resAddress,
-        "Google Maps URL": resLink,
-        "Link Google Maps": resLink,
-        "Link Gmaps": resLink,
-        "URL": resLink,
-        "Latitude": resLat,
-        "Lat": resLat,
-        "Longitude": resLng,
-        "Lng": resLng
+      const row = {
+        name, address, link, lat, lng
       };
-
+      
+      tableData.push(row);
+      renderTable();
+      showToast('Data berhasil ditambahkan ke tabel!');
+      
+      // Auto scroll to bottom of table container
+      const wrapper = document.querySelector('.excel-table-wrapper');
+      setTimeout(() => {
+        wrapper.scrollTop = wrapper.scrollHeight;
+      }, 100);
+    }
+    
+    function renderTable() {
+      const tbody = document.getElementById('tableBody');
+      tbody.innerHTML = '';
+      
+      tableData.forEach((row, index) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${index + 1}</td>
+          <td>${row.name}</td>
+          <td>${row.address}</td>
+          <td><a href="${row.link}" target="_blank" style="color: var(--primary);">Buka Link</a></td>
+          <td>${row.lat}</td>
+          <td>${row.lng}</td>
+          <td>
+            <button class="btn-delete" onclick="deleteRow(${index})" style="padding: 4px 8px; font-size: 0.75rem;">Hapus</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+    
+    function deleteRow(index) {
+      if (confirm('Hapus baris ini?')) {
+        tableData.splice(index, 1);
+        renderTable();
+      }
+    }
+    
+    function clearTable() {
+      if (tableData.length === 0) return;
+      if (confirm('Yakin ingin membersihkan seluruh isi tabel?')) {
+        tableData = [];
+        renderTable();
+        showToast('Tabel berhasil dibersihkan.');
+      }
+    }
+    
+    function exportToExcel() {
+      if (tableData.length === 0) {
+        showToast('Tabel masih kosong!', 'error');
+        return;
+      }
+      
+      const customNameInput = document.getElementById('exportFileName');
+      const customName = customNameInput ? customNameInput.value.trim() : '';
+      
+      if (!customName) {
+        showToast('Harap isi Nama File terlebih dahulu!', 'error');
+        if (customNameInput) customNameInput.focus();
+        return;
+      }
+      
       try {
-        const response = await fetchWithTimeout(url, {
-          method: 'POST',
-          mode: 'cors',
-          body: JSON.stringify({
-            action: 'appendData',
-            sheetName: sheetName,
-            data: rowData,
-            dataObj: dataObj
-          })
+        const wsData = [
+          ['No', 'Nama Tempat', 'Alamat Lengkap', 'Link Google Maps', 'Latitude', 'Longitude']
+        ];
+        
+        tableData.forEach((row, idx) => {
+          wsData.push([
+            idx + 1,
+            row.name,
+            row.address,
+            row.link,
+            row.lat,
+            row.lng
+          ]);
         });
-
-        const result = await response.json();
-        if (result && result.status === 'success') {
-          showToast('✅ Status Berhasil! Data telah masuk ke spreadsheet target.');
-        } else {
-          throw new Error(result.message || 'Gagal mengirim data');
+        
+        const wb = XLSX.utils.book_new();
+        const ws = XLSX.utils.aoa_to_sheet(wsData);
+        
+        // Add hyperlink properties for Google Maps Link (Column D, index 3)
+        for (let R = 1; R <= tableData.length; ++R) {
+          const cell_ref = XLSX.utils.encode_cell({c: 3, r: R});
+          if (ws[cell_ref] && ws[cell_ref].v) {
+            ws[cell_ref].l = { Target: ws[cell_ref].v };
+          }
         }
-      } catch (err) {
+        
+        // Auto-size columns slightly
+        const wscols = [
+          {wch: 5}, {wch: 30}, {wch: 50}, {wch: 40}, {wch: 15}, {wch: 15}
+        ];
+        ws['!cols'] = wscols;
+        
+        XLSX.utils.book_append_sheet(wb, ws, "Data Maps");
+        
+        // Generate filename
+        const filename = `${customName}.xlsx`;
+        
+        XLSX.writeFile(wb, filename);
+        showToast('Berhasil export ke Excel!');
+      } catch(err) {
         console.error(err);
-        showToast('Gagal mengirim data: ' + handleAppScriptError(err), 'error');
-      } finally {
-        btnConfirm.disabled = false;
-        btnConfirm.textContent = originalText;
+        showToast('Gagal export ke Excel.', 'error');
       }
     }
 
@@ -1393,7 +1138,7 @@
 
     function showToast(message, type = 'success') {
       const toast = document.getElementById('toast');
-      toast.textContent = message;
+      toast.innerHTML = type === 'error' ? '⚠️ ' + message : '✅ ' + message;
 
       if (type === 'error') {
         toast.classList.add('error');
@@ -1401,22 +1146,27 @@
         toast.classList.remove('error');
       }
 
-      toast.style.display = 'block';
+      toast.style.display = 'flex';
+      // Force reflow
+      void toast.offsetWidth;
+      toast.classList.add('show');
+      
       setTimeout(() => {
-        toast.style.display = 'none';
+        toast.classList.remove('show');
+        setTimeout(() => {
+          if (!toast.classList.contains('show')) {
+            toast.style.display = 'none';
+          }
+        }, 400); // Wait for transition
       }, 3500);
     }
 
     // Mendukung fitur tombol Enter cerdas (Smart Enter)
     document.addEventListener('keydown', function (event) {
       if (event.key === 'Enter') {
-        const settingsModal = document.getElementById('settings-modal');
         const apiModal = document.getElementById('apikey-modal');
-        const sheetModal = document.getElementById('sheeturl-modal');
 
-        if ((settingsModal && settingsModal.style.display === 'flex') ||
-          (apiModal && apiModal.style.display === 'flex') ||
-          (sheetModal && sheetModal.style.display === 'flex')) {
+        if (apiModal && apiModal.style.display === 'flex') {
           return;
         }
 
@@ -1431,7 +1181,7 @@
           // Jika URL persis sama dengan yang sudah di-scrape, langsung KIRIM data
           if (isResultsReady && window.lastParsedUrl === currentUrl) {
             event.preventDefault();
-            sendToSheets();
+            addToTable();
             return;
           }
           // Jika URL baru (berbeda/belum di-scrape), maka PROSES link-nya
@@ -1445,11 +1195,11 @@
         // Jika user menekan Enter bukan di input URL, dan hasilnya siap dikirim
         if (isResultsReady) {
           const tag = document.activeElement ? document.activeElement.tagName : '';
-          const isFocusingOtherInput = (tag === 'INPUT' || tag === 'TEXTAREA') && document.activeElement.id !== 'apiKey' && document.activeElement.id !== 'sheets-url-input';
+          const isFocusingOtherInput = (tag === 'INPUT' || tag === 'TEXTAREA') && document.activeElement.id !== 'apiKey';
 
           if (!isFocusingOtherInput) {
             event.preventDefault();
-            sendToSheets();
+            addToTable();
           }
         }
       }
