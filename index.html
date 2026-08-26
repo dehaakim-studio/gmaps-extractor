@@ -602,7 +602,7 @@
       <label for="gmapsUrl">Paste Link Google Maps (Gunakan Link Panjang)</label>
       <div class="input-row" style="display: flex; gap: 8px;">
         <textarea id="gmapsUrl" rows="3" placeholder="https://www.google.com/maps/place/...
-(Pisahkan antar link dengan Shift + Enter. Maks 10 link)"
+(Pisahkan antar link dengan Enter. Maksimal 10 link)"
           style="flex: 1; margin: 0; padding: 12px; border-radius: 8px; border: 1px solid var(--border-color); background-color: rgba(var(--card-bg-rgb), 0.4); color: var(--text-main); font-size: 0.95rem; outline: none; transition: all 0.3s ease; resize: vertical;"></textarea>
         <button class="btn-copy" onclick="pasteFromClipboard()" style="padding: 0 15px; cursor: pointer;">Paste</button>
         <button class="btn-delete" onclick="resetForm()">Hapus</button>
@@ -800,12 +800,7 @@
         }
       });
 
-      document.getElementById('gmapsUrl').addEventListener('keydown', function (e) {
-        if (e.key === 'Enter' && !e.shiftKey) {
-          e.preventDefault(); // Mencegah pindah baris
-          parseGmapsLink(); // Memproses link
-        }
-      });
+
 
 
     });
@@ -1247,20 +1242,8 @@
         const isResultsReady = sendBtn && !sendBtn.disabled && resultsCard && resultsCard.style.display === 'block';
 
         if (document.activeElement === gmapsInput) {
-          const currentUrl = gmapsInput.value.trim();
-
-          // Jika URL persis sama dengan yang sudah di-scrape, langsung KIRIM data
-          if (isResultsReady && window.lastParsedUrl === currentUrl) {
-            event.preventDefault();
-            addToTable();
-            return;
-          }
-          // Jika URL baru (berbeda/belum di-scrape), maka PROSES link-nya
-          else {
-            event.preventDefault();
-            parseGmapsLink();
-            return;
-          }
+          // Do nothing, let the textarea insert a newline natively
+          return;
         }
 
         // Jika user menekan Enter bukan di input URL, dan hasilnya siap dikirim
