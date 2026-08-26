@@ -927,6 +927,7 @@
           let lng = 'Tidak ditemukan';
           let name = 'Tidak ditemukan';
           let address = 'Mencari alamat...';
+          let apiHit = false;
 
           const latMatch = inputUrl.match(/!3d(-?\d+\.\d+)/);
           const lngMatch = inputUrl.match(/!4d(-?\d+\.\d+)/);
@@ -957,6 +958,7 @@
             if (cachedAddress) {
               address = cachedAddress;
             } else {
+              apiHit = true;
               try {
                 let geocodeUrl = apiKey.startsWith('AIza') 
                   ? `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${apiKey}`
@@ -1014,7 +1016,11 @@
           newRowsAdded = true;
           processedCount++;
 
-          if(urls.length > 1 && processedCount < urls.length) {
+          renderTable();
+          const wrapper = document.querySelector('.excel-table-wrapper');
+          if(wrapper) wrapper.scrollTop = wrapper.scrollHeight;
+
+          if(urls.length > 1 && processedCount < urls.length && apiHit) {
               await new Promise(r => setTimeout(r, 600)); // Delay 600ms
           }
         } catch (err) {
