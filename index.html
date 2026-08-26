@@ -29,23 +29,23 @@
     }
 
     [data-theme="light"] {
-      /* Light Mode (Pastel Green) */
-      --bg-color: #f0fdf4;
-      --bg-gradient: radial-gradient(circle at 15% 0%, rgba(16, 185, 129, 0.15), transparent 45%),
-                     radial-gradient(circle at 90% 80%, rgba(20, 184, 166, 0.1), transparent 45%),
-                     radial-gradient(circle at 80% 10%, rgba(132, 204, 22, 0.1), transparent 45%);
+      /* Light Mode (Pastel Green) - Dipertegas */
+      --bg-color: #e6f6ec;
+      --bg-gradient: radial-gradient(circle at 15% 0%, rgba(16, 185, 129, 0.2), transparent 45%),
+                     radial-gradient(circle at 90% 80%, rgba(20, 184, 166, 0.15), transparent 45%),
+                     radial-gradient(circle at 80% 10%, rgba(132, 204, 22, 0.15), transparent 45%);
       --card-bg-rgb: 255, 255, 255;
-      --card-bg: rgba(var(--card-bg-rgb), 0.75);
+      --card-bg: rgba(255, 255, 255, 0.95);
       --primary: #059669; /* Dark Emerald */
       --primary-hover: #0f766e; /* Dark Teal */
-      --text-main: #064e3b;
-      --text-muted: #475569;
-      --border-color: rgba(0, 0, 0, 0.08);
+      --text-main: #022c22;
+      --text-muted: #334155;
+      --border-color: rgba(4, 47, 46, 0.4); /* Garis SANGAT tegas / gelap */
       --border-focus: #059669;
       --success: #10b981;
       --danger: #dc2626;
       --glass-blur: blur(20px);
-      --glass-shadow: 0 8px 32px 0 rgba(6, 78, 59, 0.1);
+      --glass-shadow: 0 12px 35px 0 rgba(4, 47, 46, 0.15); /* Bayangan lebih nyata */
     }
 
     * {
@@ -537,6 +537,11 @@
     }
   </style>
   <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+
+  <!-- Leaflet CSS & JS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
 </head>
 
 <body>
@@ -596,8 +601,9 @@
     <div class="input-group">
       <label for="gmapsUrl">Paste Link Google Maps (Gunakan Link Panjang)</label>
       <div class="input-row" style="display: flex; gap: 8px;">
-        <input type="text" id="gmapsUrl" placeholder="https://www.google.com/maps/place/..."
-          style="flex: 1; margin: 0;" />
+        <textarea id="gmapsUrl" rows="3" placeholder="https://www.google.com/maps/place/...
+(Bisa paste banyak link sekaligus, pisahkan dengan Enter)"
+          style="flex: 1; margin: 0; padding: 12px; border-radius: 8px; border: 1px solid var(--border-color); background-color: rgba(var(--card-bg-rgb), 0.4); color: var(--text-main); font-size: 0.95rem; outline: none; transition: all 0.3s ease; resize: vertical;"></textarea>
         <button class="btn-copy" onclick="pasteFromClipboard()" style="padding: 0 15px; cursor: pointer;">Paste</button>
         <button class="btn-delete" onclick="resetForm()">Hapus</button>
       </div>
@@ -655,6 +661,11 @@
       </div>
 
       <button class="btn-copy-all" onclick="copyAllFormatted()">📋 COPY SEMUA FORMAT REKAP</button>
+    </div>
+    
+    <!-- Map Container -->
+    <div id="mapContainer" style="width: 100%; height: 250px; margin-top: 15px; border-radius: 12px; border: 1px solid var(--border-color); display: none; overflow: hidden; box-shadow: var(--glass-shadow);">
+      <div id="map" style="width: 100%; height: 100%;"></div>
     </div>
   </div> <!-- /container -->
 
@@ -847,144 +858,186 @@
       document.getElementById('apiKey').focus();
     }
 
+    
+    let leafMap = null;
+    let leafMarkers = null;
+
+    function initMap() {
+      if (!leafMap) {
+        document.getElementById('mapContainer').style.display = 'block';
+        leafMap = L.map('map').setView([-2.5489, 118.0149], 5);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '© OpenStreetMap'
+        }).addTo(leafMap);
+        leafMarkers = L.featureGroup().addTo(leafMap);
+      }
+    }
+
+    function addMarker(lat, lng, title) {
+      initMap();
+      const marker = L.marker([lat, lng]).bindPopup(title);
+      leafMarkers.addLayer(marker);
+      leafMap.fitBounds(leafMarkers.getBounds(), {padding: [30, 30], maxZoom: 16});
+    }
+
     async function parseGmapsLink() {
-      const inputUrl = document.getElementById('gmapsUrl').value.trim();
+      const inputText = document.getElementById('gmapsUrl').value.trim();
       const apiKey = document.getElementById('apiKey').value.trim();
       const resultsCard = document.getElementById('resultsCard');
       const loader = document.getElementById('loader');
 
-      if (!inputUrl) {
-        showToast('Masukkan URL Google Maps terlebih dahulu!');
+      if (!inputText) {
+        showToast('Masukkan setidaknya satu URL Google Maps!');
         return;
       }
-
       if (!apiKey) {
         showToast('Harap masukkan API Key terlebih dahulu!');
         return;
       }
 
-      // Simpan API Key ke localStorage
       localStorage.setItem('gmaps_api_key', apiKey);
+      
+      const urls = inputText.split(/\r?\n/).map(u => u.trim()).filter(u => u.length > 0);
+      if(urls.length === 0) return;
 
-      // Validasi: pastikan bukan shortlink
-      if (inputUrl.includes('maps.app.goo.gl')) {
-        showToast('Harap gunakan Link Panjang dari browser, BUKAN shortlink (maps.app.goo.gl)!');
-        return;
-      }
-
-      resultsCard.style.display = 'none';
       loader.style.display = 'block';
+      let processedCount = 0;
+      let newRowsAdded = false;
+      
+      // Reset map layers for new batch
+      if(leafMap && leafMarkers) {
+        leafMarkers.clearLayers();
+      }
+      
+      for (const inputUrl of urls) {
+        if (inputUrl.includes('maps.app.goo.gl')) {
+          showToast('Ditemukan shortlink (maps.app.goo.gl). Harap gunakan Link Panjang!', 'error');
+          continue;
+        }
 
-      try {
-        let lat = 'Tidak ditemukan';
-        let lng = 'Tidak ditemukan';
-        let name = 'Tidak ditemukan';
-        let address = 'Mencari alamat...';
-
-        // 1. Ekstraksi Koordinat
-        const latMatch = inputUrl.match(/!3d(-?\d+\.\d+)/);
-        const lngMatch = inputUrl.match(/!4d(-?\d+\.\d+)/);
-        if (latMatch && lngMatch) {
-          lat = latMatch[1];
-          lng = lngMatch[1];
+        if (urls.length > 1) {
+            loader.innerHTML = `<div class="loader-spinner"></div>Memproses ${processedCount + 1} dari ${urls.length} link...`;
         } else {
-          const viewportMatch = inputUrl.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
-          if (viewportMatch) {
-            lat = viewportMatch[1];
-            lng = viewportMatch[2];
-          }
+            loader.innerHTML = `<div class="loader-spinner"></div>Membaca koordinat & menghubungi Google API...`;
         }
 
-        // 2. Ekstraksi Nama Tempat (contoh: /place/Nama+Tempat/)
-        const nameMatch = inputUrl.match(/\/place\/([^\/]+)\//);
-        if (nameMatch) {
-          name = decodeURIComponent(nameMatch[1].replace(/\+/g, ' '));
-        }
+        try {
+          let lat = 'Tidak ditemukan';
+          let lng = 'Tidak ditemukan';
+          let name = 'Tidak ditemukan';
+          let address = 'Mencari alamat...';
 
-        if (lat === 'Tidak ditemukan' && name === 'Tidak ditemukan') {
-          throw new Error('Format link panjang tidak dikenali atau tidak mengandung data lokasi.');
-        }
-
-        // 3. Reverse Geocoding untuk mendapatkan Alamat Lengkap (Smart Caching + API)
-        if (lat !== 'Tidak ditemukan' && lng !== 'Tidak ditemukan') {
-          // Memaksa penghematan API dengan cara mencatat koordinat EKSAK 100% tanpa pembulatan.
-          // Jika lokasi yang sama persis pernah dicari, sistem TIDAK AKAN menembak API lagi.
-          const cacheKey = `addr_exact_${lat}_${lng}`;
-          const cachedAddress = localStorage.getItem(cacheKey);
-
-          if (cachedAddress) {
-            // Gunakan cache lokal agar menghemat limit API!
-            address = cachedAddress;
+          const latMatch = inputUrl.match(/!3d(-?\d+\.\d+)/);
+          const lngMatch = inputUrl.match(/!4d(-?\d+\.\d+)/);
+          if (latMatch && lngMatch) {
+            lat = latMatch[1];
+            lng = lngMatch[1];
           } else {
-            try {
-              // Deteksi otomatis tipe API Key (Google Key selalu berawalan AIza)
-              let geocodeUrl = '';
-              if (apiKey.startsWith('AIza')) {
-                geocodeUrl = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${apiKey}`;
-              } else {
-                geocodeUrl = `https://api.distancematrix.ai/maps/api/geocode/json?latlng=${lat},${lng}&key=${apiKey}`;
-              }
-
-              const geoResponse = await fetch(geocodeUrl);
-              const geoData = await geoResponse.json();
-
-              const resultsArr = geoData.results || geoData.result;
-
-              if (geoData.status === 'OK') {
-                if (resultsArr && resultsArr.length > 0) {
-                  address = resultsArr[0].formatted_address;
-                  localStorage.setItem(cacheKey, address); // Simpan ke cache
-                } else if (geoData.formatted_address) {
-                  address = geoData.formatted_address;
-                  localStorage.setItem(cacheKey, address); // Simpan ke cache
-                } else {
-                  address = 'Alamat tidak ditemukan di dalam response OK.';
-                }
-              } else if (geoData.status === 'REQUEST_DENIED') {
-                address = 'Error: API Key tidak valid atau limit habis.';
-              } else if (geoData.status === 'ZERO_RESULTS') {
-                address = 'Alamat tidak ditemukan untuk koordinat ini.';
-              } else {
-                address = `Error: ${geoData.status} - ${geoData.error_message || 'Gagal memuat alamat'}`;
-              }
-            } catch (geoErr) {
-              console.warn('Geocoding failed:', geoErr);
-              address = 'Gagal memuat alamat (Periksa koneksi internet atau API Key).';
+            const viewportMatch = inputUrl.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
+            if (viewportMatch) {
+              lat = viewportMatch[1];
+              lng = viewportMatch[2];
             }
           }
-        } else {
-          address = 'Koordinat tidak ditemukan, gagal melacak alamat.';
-        }
 
-        // 4. Render Output
-        document.getElementById('resName').textContent = name;
-        document.getElementById('resAddress').textContent = address;
-        document.getElementById('resLat').textContent = lat;
-        document.getElementById('resLng').textContent = lng;
-
-        // Coba ekstrak CID (Customer ID) untuk membuat link yang lebih rapih
-        let cleanLink = inputUrl;
-        const cidMatch = inputUrl.match(/1s0x[0-9a-fA-F]+:0x([0-9a-fA-F]+)/);
-        if (cidMatch && cidMatch[1]) {
-          try {
-            const cidDecimal = BigInt('0x' + cidMatch[1]).toString();
-            cleanLink = `https://maps.google.com/?cid=${cidDecimal}&g_mp=Cidnb29nbGUubWFwcy5wbGFjZXMudjEuUGxhY2VzLlNlYXJjaFRleHQQAhgEIAA`;
-          } catch (e) {
-            console.error('Gagal konversi CID:', e);
+          const nameMatch = inputUrl.match(/\/place\/([^\/]+)\//);
+          if (nameMatch) {
+            name = decodeURIComponent(nameMatch[1].replace(/\+/g, ' '));
           }
+
+          if (lat === 'Tidak ditemukan' && name === 'Tidak ditemukan') {
+            throw new Error('Format link tidak dikenali.');
+          }
+
+          if (lat !== 'Tidak ditemukan' && lng !== 'Tidak ditemukan') {
+            const cacheKey = `addr_exact_${lat}_${lng}`;
+            const cachedAddress = localStorage.getItem(cacheKey);
+
+            if (cachedAddress) {
+              address = cachedAddress;
+            } else {
+              try {
+                let geocodeUrl = apiKey.startsWith('AIza') 
+                  ? `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${apiKey}`
+                  : `https://api.distancematrix.ai/maps/api/geocode/json?latlng=${lat},${lng}&key=${apiKey}`;
+
+                const geoResponse = await fetch(geocodeUrl);
+                const geoData = await geoResponse.json();
+                const resultsArr = geoData.results || geoData.result;
+
+                if (geoData.status === 'OK') {
+                  if (resultsArr && resultsArr.length > 0) {
+                    address = resultsArr[0].formatted_address;
+                  } else if (geoData.formatted_address) {
+                    address = geoData.formatted_address;
+                  } else {
+                    address = 'Alamat tidak ditemukan.';
+                  }
+                  localStorage.setItem(cacheKey, address);
+                } else if (geoData.status === 'REQUEST_DENIED') {
+                  address = 'Error: API Key tidak valid / limit.';
+                } else if (geoData.status === 'ZERO_RESULTS') {
+                  address = 'Alamat tidak ditemukan.';
+                } else {
+                  address = `Error: ${geoData.status}`;
+                }
+              } catch (geoErr) {
+                address = 'Gagal memuat alamat.';
+              }
+            }
+            
+            addMarker(parseFloat(lat), parseFloat(lng), name !== 'Tidak ditemukan' ? name : address);
+          } else {
+            address = 'Koordinat tidak ditemukan.';
+          }
+
+          let cleanLink = inputUrl;
+          const cidMatch = inputUrl.match(/1s0x[0-9a-fA-F]+:0x([0-9a-fA-F]+)/);
+          if (cidMatch && cidMatch[1]) {
+            try {
+              const cidDecimal = BigInt('0x' + cidMatch[1]).toString();
+              cleanLink = `https://maps.google.com/?cid=${cidDecimal}&g_mp=Cidnb29nbGUubWFwcy5wbGFjZXMudjEuUGxhY2VzLlNlYXJjaFRleHQQAhgEIAA`;
+            } catch (e) {}
+          }
+
+          // UI Update for the last processed
+          document.getElementById('resName').textContent = name;
+          document.getElementById('resAddress').textContent = address;
+          document.getElementById('resLat').textContent = lat;
+          document.getElementById('resLng').textContent = lng;
+          document.getElementById('resLink').textContent = cleanLink;
+          resultsCard.style.display = 'block';
+
+          // Auto add to table
+          tableData.push({ name, address, link: cleanLink, lat, lng });
+          newRowsAdded = true;
+          processedCount++;
+
+          if(urls.length > 1 && processedCount < urls.length) {
+              await new Promise(r => setTimeout(r, 600)); // Delay 600ms
+          }
+        } catch (err) {
+           console.error(err);
         }
-        document.getElementById('resLink').textContent = cleanLink;
+      } // end for loop
 
-        resultsCard.style.display = 'block';
-        window.lastParsedUrl = inputUrl;
+      if(newRowsAdded) {
+         renderTable();
+         const wrapper = document.querySelector('.excel-table-wrapper');
+         setTimeout(() => wrapper.scrollTop = wrapper.scrollHeight, 100);
+      }
 
-      } catch (err) {
-        showToast(err.message || 'Gagal memproses link. Pastikan format URL benar.');
-        console.error(err);
-      } finally {
-        loader.style.display = 'none';
+      loader.innerHTML = `<div class="loader-spinner"></div>Membaca koordinat & menghubungi Google API...`;
+      loader.style.display = 'none';
+      
+      if(processedCount > 0) {
+        showToast(`Berhasil memproses ${processedCount} link!`);
       }
     }
+    
+    // Legacy function, replaced above
+    function _old_parse() {
 
     function copyText(elementId) {
       const text = document.getElementById(elementId).textContent;
