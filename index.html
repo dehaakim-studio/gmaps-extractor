@@ -906,7 +906,7 @@
       localStorage.setItem('gmaps_api_key', apiKey);
       
       const urls = inputText.split(/\r?\n/).map(u => u.trim()).filter(u => u.length > 0);
-      if(urls.length === 0) return;
+      if(urls.length === 0) { loader.style.display='none'; return; }
       
       if(urls.length > 10) {
         showToast('Maksimal hanya 10 link yang dapat diproses sekaligus!', 'error');
