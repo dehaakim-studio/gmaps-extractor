@@ -602,7 +602,7 @@
       <label for="gmapsUrl">Paste Link Google Maps (Gunakan Link Panjang)</label>
       <div class="input-row" style="display: flex; gap: 8px;">
         <textarea id="gmapsUrl" rows="3" placeholder="https://www.google.com/maps/place/...
-(Bisa paste banyak link sekaligus, pisahkan dengan Enter)"
+(Pisahkan antar link dengan Shift + Enter. Maks 10 link)"
           style="flex: 1; margin: 0; padding: 12px; border-radius: 8px; border: 1px solid var(--border-color); background-color: rgba(var(--card-bg-rgb), 0.4); color: var(--text-main); font-size: 0.95rem; outline: none; transition: all 0.3s ease; resize: vertical;"></textarea>
         <button class="btn-copy" onclick="pasteFromClipboard()" style="padding: 0 15px; cursor: pointer;">Paste</button>
         <button class="btn-delete" onclick="resetForm()">Hapus</button>
@@ -800,6 +800,13 @@
         }
       });
 
+      document.getElementById('gmapsUrl').addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+          e.preventDefault(); // Mencegah pindah baris
+          parseGmapsLink(); // Memproses link
+        }
+      });
+
 
     });
 
@@ -900,6 +907,11 @@
       
       const urls = inputText.split(/\r?\n/).map(u => u.trim()).filter(u => u.length > 0);
       if(urls.length === 0) return;
+      
+      if(urls.length > 10) {
+        showToast('Maksimal hanya 10 link yang dapat diproses sekaligus!', 'error');
+        return;
+      }
 
       loader.style.display = 'block';
       let processedCount = 0;
