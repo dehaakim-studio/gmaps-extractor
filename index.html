@@ -788,6 +788,18 @@
         document.getElementById('apiKey').value = savedKey;
       }
 
+      const savedTableData = localStorage.getItem('gmaps_table_data');
+      if (savedTableData) {
+        try {
+          tableData = JSON.parse(savedTableData);
+          if (tableData && tableData.length > 0) {
+            renderTable();
+          }
+        } catch (e) {
+          console.error('Failed to load table data:', e);
+        }
+      }
+
       // Dukungan tombol Enter dan auto-save untuk input API Key
       document.getElementById('apiKey').addEventListener('input', function(e) {
         localStorage.setItem('gmaps_api_key', this.value.trim());
@@ -1063,6 +1075,10 @@
 
 
     let tableData = [];
+
+    function saveTableData() {
+      localStorage.setItem('gmaps_table_data', JSON.stringify(tableData));
+    }
     
     function addToTable() {
       const name = document.getElementById('resName').textContent;
@@ -1081,6 +1097,7 @@
       };
       
       tableData.push(row);
+      saveTableData();
       renderTable();
       showToast('Data berhasil ditambahkan ke tabel!');
       
@@ -1115,6 +1132,7 @@
     function deleteRow(index) {
       if (confirm('Hapus baris ini?')) {
         tableData.splice(index, 1);
+        saveTableData();
         renderTable();
       }
     }
@@ -1123,6 +1141,7 @@
       if (tableData.length === 0) return;
       if (confirm('Yakin ingin membersihkan seluruh isi tabel?')) {
         tableData = [];
+        saveTableData();
         renderTable();
         showToast('Tabel berhasil dibersihkan.');
       }
