@@ -1068,6 +1068,12 @@
           document.getElementById('resLink').textContent = cleanLink;
           resultsCard.style.display = 'block';
 
+          const isDuplicate = archiveData.some(item => item.link === cleanLink) || tableData.some(item => item.link === cleanLink);
+          if (isDuplicate) {
+            showToast(`Link untuk ${name !== 'Tidak ditemukan' ? name : 'lokasi ini'} sudah ada, dilewati.`, 'error');
+            continue;
+          }
+
           // Auto add to table
           tableData.push({ name, address, link: cleanLink, lat, lng });
           archiveData.push({ date: new Date().toLocaleString('id-ID'), name, address, link: cleanLink, lat, lng });
@@ -1255,6 +1261,12 @@
 
       if (name === '-' || name === 'Tidak ditemukan') {
         showToast('Belum ada data lokasi yang valid diproses!', 'error');
+        return;
+      }
+
+      const isDuplicate = archiveData.some(item => item.link === link) || tableData.some(item => item.link === link);
+      if (isDuplicate) {
+        showToast('Data ini sudah ada di arsip/tabel!', 'error');
         return;
       }
 
