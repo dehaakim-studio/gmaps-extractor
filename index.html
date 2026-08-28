@@ -672,14 +672,21 @@
   <!-- RIGHT PANEL: Data Table -->
   <div class="table-container">
     <div class="table-header">
-      <h3 style="margin: 0; font-size: 1.1rem; color: var(--text-main);">Data Tabel Excel</h3>
-      <div class="table-actions" style="display: flex; gap: 10px; align-items: center;">
+      <div style="display: flex; gap: 20px; align-items: center;">
+        <h3 id="tab-current" onclick="switchTab('current')" style="cursor: pointer; margin: 0; font-size: 1.1rem; color: var(--primary); border-bottom: 2px solid var(--primary); padding-bottom: 4px; transition: all 0.3s ease;">Data Tabel</h3>
+        <h3 id="tab-archive" onclick="switchTab('archive')" style="cursor: pointer; margin: 0; font-size: 1.1rem; color: var(--text-muted); padding-bottom: 4px; transition: all 0.3s ease; border-bottom: 2px solid transparent;">Arsip Riwayat</h3>
+      </div>
+      <div class="table-actions" id="current-actions" style="display: flex; gap: 10px; align-items: center;">
         <input type="text" id="exportFileName" placeholder="Nama File (Wajib)" style="padding: 8px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-color); color: var(--text-main); font-size: 0.85rem; width: 160px; outline: none;">
         <button class="btn-process" onclick="exportToExcel()" style="padding: 8px 15px; font-size: 0.85rem; width: auto; background-color: #10b981; color: white;">Export ke Excel (.xlsx)</button>
         <button class="btn-delete" onclick="clearTable()" style="padding: 8px 15px; background-color: transparent; border: 1px solid #ef4444;">Bersihkan</button>
       </div>
+      <div class="table-actions" id="archive-actions" style="display: none; gap: 10px; align-items: center;">
+        <button class="btn-process" onclick="exportArchiveToExcel()" style="padding: 8px 15px; font-size: 0.85rem; width: auto; background-color: #10b981; color: white;">Export Arsip</button>
+        <button class="btn-delete" onclick="clearArchive()" style="padding: 8px 15px; background-color: transparent; border: 1px solid #ef4444;">Hapus Arsip</button>
+      </div>
     </div>
-    <div class="excel-table-wrapper">
+    <div class="excel-table-wrapper" id="current-table-wrapper">
       <table class="excel-table" id="dataTable">
         <thead>
           <tr>
@@ -694,6 +701,25 @@
         </thead>
         <tbody id="tableBody">
           <!-- Data rows will go here -->
+        </tbody>
+      </table>
+    </div>
+    <div class="excel-table-wrapper" id="archive-table-wrapper" style="display: none;">
+      <table class="excel-table" id="archiveTable">
+        <thead>
+          <tr>
+            <th>No</th>
+            <th>Tanggal</th>
+            <th>Nama Tempat</th>
+            <th>Alamat Lengkap</th>
+            <th>Link Google Maps</th>
+            <th>Latitude</th>
+            <th>Longitude</th>
+            <th>Aksi</th>
+          </tr>
+        </thead>
+        <tbody id="archiveTableBody">
+          <!-- Archive rows will go here -->
         </tbody>
       </table>
     </div>
@@ -797,6 +823,18 @@
           }
         } catch (e) {
           console.error('Failed to load table data:', e);
+        }
+      }
+
+      const savedArchiveData = localStorage.getItem('gmaps_archive_data');
+      if (savedArchiveData) {
+        try {
+          archiveData = JSON.parse(savedArchiveData);
+          if (archiveData && archiveData.length > 0) {
+            renderArchiveTable();
+          }
+        } catch (e) {
+          console.error('Failed to load archive data:', e);
         }
       }
 
@@ -1032,6 +1070,8 @@
 
           // Auto add to table
           tableData.push({ name, address, link: cleanLink, lat, lng });
+          archiveData.push({ date: new Date().toLocaleString('id-ID'), name, address, link: cleanLink, lat, lng });
+          saveArchiveData();
           newRowsAdded = true;
           processedCount++;
 
@@ -1075,6 +1115,132 @@
 
 
     let tableData = [];
+    let archiveData = [];
+
+    function switchTab(tab) {
+      const tabCurrent = document.getElementById('tab-current');
+      const tabArchive = document.getElementById('tab-archive');
+      const currentWrapper = document.getElementById('current-table-wrapper');
+      const archiveWrapper = document.getElementById('archive-table-wrapper');
+      const currentActions = document.getElementById('current-actions');
+      const archiveActions = document.getElementById('archive-actions');
+
+      if (tab === 'archive') {
+        tabArchive.style.color = 'var(--primary)';
+        tabArchive.style.borderBottom = '2px solid var(--primary)';
+        tabCurrent.style.color = 'var(--text-muted)';
+        tabCurrent.style.borderBottom = '2px solid transparent';
+        
+        currentWrapper.style.display = 'none';
+        currentActions.style.display = 'none';
+        archiveWrapper.style.display = 'block';
+        archiveActions.style.display = 'flex';
+        renderArchiveTable();
+      } else {
+        tabCurrent.style.color = 'var(--primary)';
+        tabCurrent.style.borderBottom = '2px solid var(--primary)';
+        tabArchive.style.color = 'var(--text-muted)';
+        tabArchive.style.borderBottom = '2px solid transparent';
+        
+        archiveWrapper.style.display = 'none';
+        archiveActions.style.display = 'none';
+        currentWrapper.style.display = 'block';
+        currentActions.style.display = 'flex';
+      }
+    }
+
+    function renderArchiveTable() {
+      const tbody = document.getElementById('archiveTableBody');
+      if (!tbody) return;
+      tbody.innerHTML = '';
+      
+      archiveData.forEach((row, index) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${index + 1}</td>
+          <td>${row.date || '-'}</td>
+          <td>${row.name}</td>
+          <td>${row.address}</td>
+          <td><a href="${row.link}" target="_blank" style="color: var(--primary);">Buka Link</a></td>
+          <td>${row.lat}</td>
+          <td>${row.lng}</td>
+          <td>
+            <button class="btn-delete" onclick="deleteArchiveRow(${index})" style="padding: 4px 8px; font-size: 0.75rem;">Hapus</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function deleteArchiveRow(index) {
+      if (confirm('Hapus baris arsip ini?')) {
+        archiveData.splice(index, 1);
+        saveArchiveData();
+        renderArchiveTable();
+      }
+    }
+
+    function clearArchive() {
+      if (archiveData.length === 0) return;
+      if (confirm('Yakin ingin membersihkan seluruh arsip riwayat?')) {
+        archiveData = [];
+        saveArchiveData();
+        renderArchiveTable();
+        showToast('Arsip berhasil dibersihkan.');
+      }
+    }
+
+    function exportArchiveToExcel() {
+      if (archiveData.length === 0) {
+        showToast('Arsip masih kosong!', 'error');
+        return;
+      }
+      
+      try {
+        const wsData = [
+          ['No', 'Tanggal', 'Nama Tempat', 'Alamat Lengkap', 'Link Google Maps', 'Latitude', 'Longitude']
+        ];
+        
+        archiveData.forEach((row, idx) => {
+          wsData.push([
+            idx + 1,
+            row.date || '-',
+            row.name,
+            row.address,
+            row.link,
+            row.lat,
+            row.lng
+          ]);
+        });
+        
+        const wb = XLSX.utils.book_new();
+        const ws = XLSX.utils.aoa_to_sheet(wsData);
+        
+        for (let R = 1; R <= archiveData.length; ++R) {
+          const cell_ref = XLSX.utils.encode_cell({c: 4, r: R});
+          if (ws[cell_ref] && ws[cell_ref].v) {
+            ws[cell_ref].l = { Target: ws[cell_ref].v };
+          }
+        }
+        
+        const wscols = [
+          {wch: 5}, {wch: 20}, {wch: 30}, {wch: 50}, {wch: 40}, {wch: 15}, {wch: 15}
+        ];
+        ws['!cols'] = wscols;
+        
+        XLSX.utils.book_append_sheet(wb, ws, "Data Arsip");
+        const filename = `Arsip_Maps_${new Date().toISOString().slice(0,10)}.xlsx`;
+        XLSX.writeFile(wb, filename);
+        showToast('Berhasil export Arsip ke Excel!');
+      } catch(err) {
+        console.error(err);
+        showToast('Gagal export Arsip.', 'error');
+      }
+    }
+
+    function saveArchiveData() {
+      localStorage.setItem('gmaps_archive_data', JSON.stringify(archiveData));
+    }
 
     function saveTableData() {
       localStorage.setItem('gmaps_table_data', JSON.stringify(tableData));
@@ -1097,6 +1263,8 @@
       };
       
       tableData.push(row);
+      archiveData.push({ date: new Date().toLocaleString('id-ID'), ...row });
+      saveArchiveData();
       saveTableData();
       renderTable();
       showToast('Data berhasil ditambahkan ke tabel!');
