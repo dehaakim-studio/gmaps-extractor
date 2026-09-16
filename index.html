@@ -1558,62 +1558,69 @@
           const data = new Uint8Array(e.target.result);
           const workbook = XLSX.read(data, {type: 'array'});
           
-          const firstSheetName = workbook.SheetNames[0];
-          const worksheet = workbook.Sheets[firstSheetName];
-          
-          const rows = XLSX.utils.sheet_to_json(worksheet, {header: 1});
-          
-          if (rows.length < 2) {
-            showToast('Data Excel kosong atau format tidak sesuai!', 'error');
-            event.target.value = '';
-            return;
+          let kml = `<?xml version="1.0" encoding="UTF-8"?>\n<kml xmlns="http://www.opengis.net/kml/2.2">\n  <Document>\n    <name>Excel_To_KML_${file.name}</name>\n`;
+          let validSheetsCount = 0;
+
+          for (let sheetIndex = 0; sheetIndex < workbook.SheetNames.length; sheetIndex++) {
+            const sheetName = workbook.SheetNames[sheetIndex];
+            const worksheet = workbook.Sheets[sheetName];
+            const rows = XLSX.utils.sheet_to_json(worksheet, {header: 1});
+            
+            if (rows.length < 2) continue; // Skip empty sheets
+
+            const headerRow = rows[0].map(h => typeof h === 'string' ? h.toLowerCase().trim() : '');
+            
+            let nameIdx = headerRow.findIndex(h => h.includes('nama tempat') || h.includes('business name') || h === 'name');
+            let addressIdx = headerRow.findIndex(h => h.includes('alamat') || h.includes('address'));
+            let linkIdx = headerRow.findIndex(h => h.includes('link') || h.includes('google maps u'));
+            let latIdx = headerRow.findIndex(h => h.includes('latitude') || h.includes('lat'));
+            let lngIdx = headerRow.findIndex(h => h.includes('longitude') || h.includes('lng') || h.includes('lon'));
+
+            if (nameIdx === -1 || latIdx === -1 || lngIdx === -1) {
+              continue; // Skip sheets without required columns
+            }
+
+            validSheetsCount++;
+            kml += `    <Folder>\n`;
+            kml += `      <name>${sheetName.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</name>\n`;
+
+            for (let i = 1; i < rows.length; i++) {
+              const row = rows[i];
+              if (!row || row.length === 0) continue;
+              
+              let name = row[nameIdx] || 'Unknown';
+              let address = addressIdx !== -1 ? (row[addressIdx] || '-') : '-';
+              let link = linkIdx !== -1 ? (row[linkIdx] || '-') : '-';
+              let latStr = row[latIdx];
+              let lngStr = row[lngIdx];
+
+              if (latStr === undefined || lngStr === undefined) continue;
+
+              let lat = parseFloat(String(latStr).replace(',', '.'));
+              let lng = parseFloat(String(lngStr).replace(',', '.'));
+
+              if (isNaN(lat) || isNaN(lng)) continue;
+
+              name = String(name).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+              
+              kml += `      <Placemark>\n`;
+              kml += `        <name>${name}</name>\n`;
+              kml += `        <description><![CDATA[\n`;
+              kml += `          <b>Alamat:</b> ${address}<br/>\n`;
+              kml += `          <b>Link:</b> <a href="${link}">${link}</a>\n`;
+              kml += `        ]]></description>\n`;
+              kml += `        <Point>\n`;
+              kml += `          <coordinates>${lng},${lat},0</coordinates>\n`;
+              kml += `        </Point>\n`;
+              kml += `      </Placemark>\n`;
+            }
+            kml += `    </Folder>\n`;
           }
 
-          const headerRow = rows[0].map(h => typeof h === 'string' ? h.toLowerCase().trim() : '');
-          
-          let nameIdx = headerRow.findIndex(h => h.includes('nama tempat') || h.includes('business name') || h === 'name');
-          let addressIdx = headerRow.findIndex(h => h.includes('alamat') || h.includes('address'));
-          let linkIdx = headerRow.findIndex(h => h.includes('link') || h.includes('google maps u'));
-          let latIdx = headerRow.findIndex(h => h.includes('latitude') || h.includes('lat'));
-          let lngIdx = headerRow.findIndex(h => h.includes('longitude') || h.includes('lng') || h.includes('lon'));
-
-          if (nameIdx === -1 || latIdx === -1 || lngIdx === -1) {
+          if (validSheetsCount === 0) {
             showToast('Format header Excel tidak dikenali! Pastikan ada kolom Nama, Latitude, dan Longitude.', 'error');
             event.target.value = '';
             return;
-          }
-
-          let kml = `<?xml version="1.0" encoding="UTF-8"?>\n<kml xmlns="http://www.opengis.net/kml/2.2">\n  <Document>\n    <name>Excel_To_KML_${file.name}</name>\n`;
-
-          for (let i = 1; i < rows.length; i++) {
-            const row = rows[i];
-            if (!row || row.length === 0) continue;
-            
-            let name = row[nameIdx] || 'Unknown';
-            let address = addressIdx !== -1 ? (row[addressIdx] || '-') : '-';
-            let link = linkIdx !== -1 ? (row[linkIdx] || '-') : '-';
-            let latStr = row[latIdx];
-            let lngStr = row[lngIdx];
-
-            if (latStr === undefined || lngStr === undefined) continue;
-
-            let lat = parseFloat(String(latStr).replace(',', '.'));
-            let lng = parseFloat(String(lngStr).replace(',', '.'));
-
-            if (isNaN(lat) || isNaN(lng)) continue;
-
-            name = String(name).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-            
-            kml += `    <Placemark>\n`;
-            kml += `      <name>${name}</name>\n`;
-            kml += `      <description><![CDATA[\n`;
-            kml += `        <b>Alamat:</b> ${address}<br/>\n`;
-            kml += `        <b>Link:</b> <a href="${link}">${link}</a>\n`;
-            kml += `      ]]></description>\n`;
-            kml += `      <Point>\n`;
-            kml += `        <coordinates>${lng},${lat},0</coordinates>\n`;
-            kml += `      </Point>\n`;
-            kml += `    </Placemark>\n`;
           }
 
           kml += `  </Document>\n</kml>`;
