@@ -242,6 +242,33 @@
       background-color: rgba(var(--card-bg-rgb), 0.8);
     }
 
+    select {
+      flex: 1;
+      padding: 14px 16px;
+      border-radius: 10px;
+      border: 1px solid var(--border-color);
+      background-color: rgba(var(--card-bg-rgb), 0.4);
+      color: var(--text-main);
+      font-size: 0.95rem;
+      outline: none;
+      transition: all 0.3s ease;
+      appearance: none;
+    }
+
+    select:focus {
+      border-color: var(--border-focus);
+      background-color: rgba(var(--card-bg-rgb), 0.8);
+    }
+
+    select option {
+      background-color: #02160f; /* Dark theme default for options */
+      color: #f8fafc;
+    }
+    [data-theme="light"] select option {
+      background-color: #ffffff;
+      color: #022c22;
+    }
+
     button {
       padding: 12px 20px;
       background-color: var(--primary);
@@ -609,6 +636,37 @@
       </div>
     </div>
 
+    <!-- Dropdown Kategori -->
+    <div class="input-group">
+      <label for="kategoriSelect">Kategori Fasilitas</label>
+      <select id="kategoriSelect" onchange="toggleCustomCategory()">
+        <option value="">-- Pilih Kategori --</option>
+        <option value="Fasilitas Pendidikan">Fasilitas Pendidikan</option>
+        <option value="Fasilitas Kesehatan">Fasilitas Kesehatan</option>
+        <option value="Fasilitas Keagamaan">Fasilitas Keagamaan</option>
+        <option value="Kantor Pemerintahan / Pelayanan Publik">Kantor Pemerintahan / Pelayanan Publik</option>
+        <option value="Infrastruktur & Fasilitas Umum">Infrastruktur & Fasilitas Umum</option>
+        <option value="Lainnya">Lainnya (Custom Input)</option>
+      </select>
+      <input type="text" id="customKategori" placeholder="Masukkan Kategori Kustom..." style="display: none; margin-top: 8px;">
+    </div>
+
+    <!-- Dropdown Kecamatan -->
+    <div class="input-group">
+      <label for="kecamatanSelect">Wilayah (Kecamatan)</label>
+      <select id="kecamatanSelect">
+        <option value="">-- Pilih Kecamatan --</option>
+        <option value="Sumber">Sumber</option>
+        <option value="Talun">Talun</option>
+        <option value="Plumbon">Plumbon</option>
+        <option value="Weru">Weru</option>
+        <option value="Kedawung">Kedawung</option>
+        <option value="Mundu">Mundu</option>
+        <option value="Gunung Jati">Gunung Jati</option>
+        <option value="Lainnya">Lainnya...</option>
+      </select>
+    </div>
+
     <div class="action-buttons-container">
       <button class="btn-process" onclick="parseGmapsLink()">Proses Link</button>
       <button id="btn-confirm-send" class="btn-send-sheets" onclick="addToTable()">Tambahkan ke Tabel</button>
@@ -676,13 +734,38 @@
         <h3 id="tab-current" onclick="switchTab('current')" style="cursor: pointer; margin: 0; font-size: 1.1rem; color: var(--primary); border-bottom: 2px solid var(--primary); padding-bottom: 4px; transition: all 0.3s ease;">Data Tabel</h3>
         <h3 id="tab-archive" onclick="switchTab('archive')" style="cursor: pointer; margin: 0; font-size: 1.1rem; color: var(--text-muted); padding-bottom: 4px; transition: all 0.3s ease; border-bottom: 2px solid transparent;">Arsip Riwayat</h3>
       </div>
-      <div class="table-actions" id="current-actions" style="display: flex; gap: 10px; align-items: center;">
-        <input type="text" id="exportFileName" placeholder="Nama File (Wajib)" style="padding: 8px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-color); color: var(--text-main); font-size: 0.85rem; width: 160px; outline: none;">
-        <button class="btn-process" onclick="exportToExcel()" style="padding: 8px 15px; font-size: 0.85rem; width: auto; background-color: #10b981; color: white;">Export ke Excel (.xlsx)</button>
+      <div class="table-actions" id="current-actions" style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 10px;">
+        <select id="filterKategori" onchange="renderTable()" style="padding: 8px; border-radius: 6px; font-size: 0.85rem; width: 130px; height: 35px; min-width: unset; flex: unset;">
+          <option value="all">All Kategori</option>
+          <option value="Fasilitas Pendidikan">Pendidikan</option>
+          <option value="Fasilitas Kesehatan">Kesehatan</option>
+          <option value="Fasilitas Keagamaan">Keagamaan</option>
+          <option value="Kantor Pemerintahan / Pelayanan Publik">Pemerintahan</option>
+          <option value="Infrastruktur & Fasilitas Umum">Infrastruktur</option>
+          <option value="Lainnya">Lainnya</option>
+        </select>
+        <select id="filterKecamatan" onchange="renderTable()" style="padding: 8px; border-radius: 6px; font-size: 0.85rem; width: 130px; height: 35px; min-width: unset; flex: unset;">
+          <option value="all">All Kecamatan</option>
+          <option value="Sumber">Sumber</option>
+          <option value="Talun">Talun</option>
+          <option value="Plumbon">Plumbon</option>
+          <option value="Weru">Weru</option>
+          <option value="Kedawung">Kedawung</option>
+          <option value="Mundu">Mundu</option>
+          <option value="Gunung Jati">Gunung Jati</option>
+          <option value="Lainnya">Lainnya...</option>
+        </select>
+        <button class="btn-process" onclick="exportToGeoJSON('current')" style="padding: 8px 15px; font-size: 0.85rem; width: auto; background-color: #3b82f6; color: white;">Export GeoJSON</button>
+        <button class="btn-process" onclick="exportToKML('current')" style="padding: 8px 15px; font-size: 0.85rem; width: auto; background-color: #8b5cf6; color: white;">Export KML</button>
+        
+        <input type="text" id="exportFileName" placeholder="Nama File (Wajib)" style="padding: 8px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-color); color: var(--text-main); font-size: 0.85rem; width: 140px; outline: none; height: 35px;">
+        <button class="btn-process" onclick="exportToExcel()" style="padding: 8px 15px; font-size: 0.85rem; width: auto; background-color: #10b981; color: white;">Export Excel</button>
         <button class="btn-delete" onclick="clearTable()" style="padding: 8px 15px; background-color: transparent; border: 1px solid #ef4444;">Bersihkan</button>
       </div>
-      <div class="table-actions" id="archive-actions" style="display: none; gap: 10px; align-items: center;">
-        <button class="btn-process" onclick="exportArchiveToExcel()" style="padding: 8px 15px; font-size: 0.85rem; width: auto; background-color: #10b981; color: white;">Export Arsip</button>
+      <div class="table-actions" id="archive-actions" style="display: none; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 10px;">
+        <button class="btn-process" onclick="exportToGeoJSON('archive')" style="padding: 8px 15px; font-size: 0.85rem; width: auto; background-color: #3b82f6; color: white;">Export GeoJSON Arsip</button>
+        <button class="btn-process" onclick="exportToKML('archive')" style="padding: 8px 15px; font-size: 0.85rem; width: auto; background-color: #8b5cf6; color: white;">Export KML Arsip</button>
+        <button class="btn-process" onclick="exportArchiveToExcel()" style="padding: 8px 15px; font-size: 0.85rem; width: auto; background-color: #10b981; color: white;">Export Excel Arsip</button>
         <button class="btn-delete" onclick="clearArchive()" style="padding: 8px 15px; background-color: transparent; border: 1px solid #ef4444;">Hapus Arsip</button>
       </div>
     </div>
@@ -692,6 +775,8 @@
           <tr>
             <th>No</th>
             <th>Nama Tempat</th>
+            <th>Kategori</th>
+            <th>Kecamatan</th>
             <th>Alamat Lengkap</th>
             <th>Link Google Maps</th>
             <th>Latitude</th>
@@ -711,6 +796,8 @@
             <th>No</th>
             <th>Tanggal</th>
             <th>Nama Tempat</th>
+            <th>Kategori</th>
+            <th>Kecamatan</th>
             <th>Alamat Lengkap</th>
             <th>Link Google Maps</th>
             <th>Latitude</th>
@@ -926,9 +1013,38 @@
       }
     }
 
-    function addMarker(lat, lng, title) {
+    const categoryColors = {
+      'Fasilitas Pendidikan': '#3b82f6', // blue
+      'Fasilitas Kesehatan': '#ef4444', // red
+      'Fasilitas Keagamaan': '#10b981', // green
+      'Kantor Pemerintahan / Pelayanan Publik': '#f59e0b', // orange
+      'Infrastruktur & Fasilitas Umum': '#8b5cf6', // purple
+      'Lainnya': '#6b7280' // gray
+    };
+
+    function getCustomIcon(color) {
+      const svgIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="${color}" width="32px" height="32px"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>`;
+      const url = "data:image/svg+xml;base64," + btoa(svgIcon);
+      return L.icon({
+        iconUrl: url,
+        iconSize: [32, 32],
+        iconAnchor: [16, 32],
+        popupAnchor: [0, -32]
+      });
+    }
+
+    function addMarker(lat, lng, title, kategori, kecamatan) {
       initMap();
-      const marker = L.marker([lat, lng]).bindPopup(title);
+      const color = categoryColors[kategori] || '#6b7280';
+      const popupContent = `
+        <div style="font-family: Outfit, sans-serif; font-size: 13px; color: #333;">
+          <strong style="font-size: 15px; color: #000;">${title}</strong><br/>
+          <b>Kategori:</b> ${kategori || '-'}<br/>
+          <b>Kecamatan:</b> ${kecamatan || '-'}<br/>
+          <b>Lat/Lng:</b> ${lat}, ${lng}
+        </div>
+      `;
+      const marker = L.marker([lat, lng], {icon: getCustomIcon(color)}).bindPopup(popupContent);
       leafMarkers.addLayer(marker);
       leafMap.fitBounds(leafMarkers.getBounds(), {padding: [30, 30], maxZoom: 16});
     }
@@ -938,6 +1054,9 @@
       const apiKey = document.getElementById('apiKey').value.trim();
       const resultsCard = document.getElementById('resultsCard');
       const loader = document.getElementById('loader');
+      
+      const kategori = getSelectedKategori();
+      const kecamatan = getSelectedKecamatan();
 
       if (!inputText) {
         showToast('Masukkan setidaknya satu URL Google Maps!');
@@ -1046,7 +1165,7 @@
               }
             }
             
-            addMarker(parseFloat(lat), parseFloat(lng), name !== 'Tidak ditemukan' ? name : address);
+            addMarker(parseFloat(lat), parseFloat(lng), name !== 'Tidak ditemukan' ? name : address, kategori, kecamatan);
           } else {
             address = 'Koordinat tidak ditemukan.';
           }
@@ -1166,6 +1285,8 @@
           <td>${index + 1}</td>
           <td>${row.date || '-'}</td>
           <td>${row.name}</td>
+          <td>${row.kategori || '-'}</td>
+          <td>${row.kecamatan || '-'}</td>
           <td>${row.address}</td>
           <td><a href="${row.link}" target="_blank" style="color: var(--primary);">Buka Link</a></td>
           <td>${row.lat}</td>
@@ -1204,7 +1325,7 @@
       
       try {
         const wsData = [
-          ['No', 'Tanggal', 'Nama Tempat', 'Alamat Lengkap', 'Link Google Maps', 'Latitude', 'Longitude']
+          ['No', 'Tanggal', 'Nama Tempat', 'Kategori', 'Kecamatan', 'Alamat Lengkap', 'Link Google Maps', 'Latitude', 'Longitude']
         ];
         
         archiveData.forEach((row, idx) => {
@@ -1212,6 +1333,8 @@
             idx + 1,
             row.date || '-',
             row.name,
+            row.kategori || '-',
+            row.kecamatan || '-',
             row.address,
             row.link,
             row.lat,
@@ -1223,14 +1346,14 @@
         const ws = XLSX.utils.aoa_to_sheet(wsData);
         
         for (let R = 1; R <= archiveData.length; ++R) {
-          const cell_ref = XLSX.utils.encode_cell({c: 4, r: R});
+          const cell_ref = XLSX.utils.encode_cell({c: 6, r: R});
           if (ws[cell_ref] && ws[cell_ref].v) {
             ws[cell_ref].l = { Target: ws[cell_ref].v };
           }
         }
         
         const wscols = [
-          {wch: 5}, {wch: 20}, {wch: 30}, {wch: 50}, {wch: 40}, {wch: 15}, {wch: 15}
+          {wch: 5}, {wch: 20}, {wch: 30}, {wch: 20}, {wch: 20}, {wch: 50}, {wch: 40}, {wch: 15}, {wch: 15}
         ];
         ws['!cols'] = wscols;
         
@@ -1252,26 +1375,103 @@
       localStorage.setItem('gmaps_table_data', JSON.stringify(tableData));
     }
     
+    function toggleCustomCategory() {
+      const select = document.getElementById('kategoriSelect');
+      const customInput = document.getElementById('customKategori');
+      if (select.value === 'Lainnya') {
+        customInput.style.display = 'block';
+      } else {
+        customInput.style.display = 'none';
+      }
+    }
+
+    function getSelectedKategori() {
+      const select = document.getElementById('kategoriSelect');
+      if (select.value === 'Lainnya') {
+        return document.getElementById('customKategori').value.trim() || 'Lainnya';
+      }
+      return select.value;
+    }
+
+    function getSelectedKecamatan() {
+      return document.getElementById('kecamatanSelect').value;
+    }
+
+    function normalizeString(str) {
+      if (!str) return '';
+      return str.toLowerCase().replace(/[^a-z0-9]/g, '');
+    }
+
+    function calculateHaversineDistance(lat1, lon1, lat2, lon2) {
+      const R = 6371e3; // metres
+      const p1 = lat1 * Math.PI/180;
+      const p2 = lat2 * Math.PI/180;
+      const dp = (lat2-lat1) * Math.PI/180;
+      const dl = (lon2-lon1) * Math.PI/180;
+
+      const a = Math.sin(dp/2) * Math.sin(dp/2) +
+                Math.cos(p1) * Math.cos(p2) *
+                Math.sin(dl/2) * Math.sin(dl/2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+      return R * c;
+    }
+
     function addToTable() {
       const name = document.getElementById('resName').textContent;
       const address = document.getElementById('resAddress').textContent;
-      const lat = document.getElementById('resLat').textContent;
-      const lng = document.getElementById('resLng').textContent;
+      const latText = document.getElementById('resLat').textContent;
+      const lngText = document.getElementById('resLng').textContent;
+      const lat = parseFloat(latText);
+      const lng = parseFloat(lngText);
       const link = document.getElementById('resLink').textContent;
+      
+      const kategori = getSelectedKategori();
+      const kecamatan = getSelectedKecamatan();
 
       if (name === '-' || name === 'Tidak ditemukan') {
         showToast('Belum ada data lokasi yang valid diproses!', 'error');
         return;
       }
-
-      const isDuplicate = archiveData.some(item => item.link === link) || tableData.some(item => item.link === link);
-      if (isDuplicate) {
-        showToast('Data ini sudah ada di arsip/tabel!', 'error');
+      if (!kategori) {
+        showToast('Harap pilih Kategori Fasilitas terlebih dahulu!', 'error');
+        return;
+      }
+      if (!kecamatan) {
+        showToast('Harap pilih Wilayah Kecamatan terlebih dahulu!', 'error');
         return;
       }
 
+      const isDuplicateLink = archiveData.some(item => item.link === link) || tableData.some(item => item.link === link);
+      if (isDuplicateLink) {
+        showToast('Data ini sudah ada di arsip/tabel (Link Ganda)!', 'error');
+        return;
+      }
+      
+      const normName = normalizeString(name);
+      let duplicateReason = null;
+      
+      const checkDuplicate = (item) => {
+        if (normalizeString(item.name) === normName) {
+           duplicateReason = `Nama tempat sangat mirip dengan: ${item.name}`;
+           return true;
+        }
+        if (!isNaN(lat) && !isNaN(lng) && !isNaN(parseFloat(item.lat)) && !isNaN(parseFloat(item.lng))) {
+           const dist = calculateHaversineDistance(lat, lng, parseFloat(item.lat), parseFloat(item.lng));
+           if (dist < 10) {
+              duplicateReason = `Jarak terlalu dekat (<10m) dengan: ${item.name}`;
+              return true;
+           }
+        }
+        return false;
+      };
+
+      if (tableData.some(checkDuplicate) || archiveData.some(checkDuplicate)) {
+         showToast(`Gagal menambahkan! Deteksi duplikasi: ${duplicateReason}`, 'error');
+         return;
+      }
+
       const row = {
-        name, address, link, lat, lng
+        name, kategori, kecamatan, address, link, lat: latText, lng: lngText
       };
       
       tableData.push(row);
@@ -1281,7 +1481,6 @@
       renderTable();
       showToast('Data berhasil ditambahkan ke tabel!');
       
-      // Auto scroll to bottom of table container
       const wrapper = document.querySelector('.excel-table-wrapper');
       setTimeout(() => {
         wrapper.scrollTop = wrapper.scrollHeight;
@@ -1292,11 +1491,19 @@
       const tbody = document.getElementById('tableBody');
       tbody.innerHTML = '';
       
+      const filterKat = document.getElementById('filterKategori') ? document.getElementById('filterKategori').value : 'all';
+      const filterKec = document.getElementById('filterKecamatan') ? document.getElementById('filterKecamatan').value : 'all';
+      
       tableData.forEach((row, index) => {
+        if (filterKat !== 'all' && row.kategori !== filterKat && !(filterKat === 'Lainnya' && !['Fasilitas Pendidikan', 'Fasilitas Kesehatan', 'Fasilitas Keagamaan', 'Kantor Pemerintahan / Pelayanan Publik', 'Infrastruktur & Fasilitas Umum'].includes(row.kategori))) return;
+        if (filterKec !== 'all' && row.kecamatan !== filterKec && !(filterKec === 'Lainnya' && !['Sumber', 'Talun', 'Plumbon', 'Weru', 'Kedawung', 'Mundu', 'Gunung Jati'].includes(row.kecamatan))) return;
+
         const tr = document.createElement('tr');
         tr.innerHTML = `
           <td>${index + 1}</td>
           <td>${row.name}</td>
+          <td>${row.kategori || '-'}</td>
+          <td>${row.kecamatan || '-'}</td>
           <td>${row.address}</td>
           <td><a href="${row.link}" target="_blank" style="color: var(--primary);">Buka Link</a></td>
           <td>${row.lat}</td>
@@ -1344,13 +1551,15 @@
       
       try {
         const wsData = [
-          ['No', 'Nama Tempat', 'Alamat Lengkap', 'Link Google Maps', 'Latitude', 'Longitude']
+          ['No', 'Nama Tempat', 'Kategori', 'Kecamatan', 'Alamat Lengkap', 'Link Google Maps', 'Latitude', 'Longitude']
         ];
         
         tableData.forEach((row, idx) => {
           wsData.push([
             idx + 1,
             row.name,
+            row.kategori || '-',
+            row.kecamatan || '-',
             row.address,
             row.link,
             row.lat,
@@ -1361,9 +1570,9 @@
         const wb = XLSX.utils.book_new();
         const ws = XLSX.utils.aoa_to_sheet(wsData);
         
-        // Add hyperlink properties for Google Maps Link (Column D, index 3)
+        // Add hyperlink properties for Google Maps Link (Column F, index 5)
         for (let R = 1; R <= tableData.length; ++R) {
-          const cell_ref = XLSX.utils.encode_cell({c: 3, r: R});
+          const cell_ref = XLSX.utils.encode_cell({c: 5, r: R});
           if (ws[cell_ref] && ws[cell_ref].v) {
             ws[cell_ref].l = { Target: ws[cell_ref].v };
           }
@@ -1371,7 +1580,7 @@
         
         // Auto-size columns slightly
         const wscols = [
-          {wch: 5}, {wch: 30}, {wch: 50}, {wch: 40}, {wch: 15}, {wch: 15}
+          {wch: 5}, {wch: 30}, {wch: 20}, {wch: 20}, {wch: 50}, {wch: 40}, {wch: 15}, {wch: 15}
         ];
         ws['!cols'] = wscols;
         
@@ -1386,6 +1595,79 @@
         console.error(err);
         showToast('Gagal export ke Excel.', 'error');
       }
+    }
+
+    function exportToGeoJSON(target) {
+      const dataToExport = target === 'archive' ? archiveData : tableData;
+      if (dataToExport.length === 0) {
+        showToast('Data masih kosong!', 'error');
+        return;
+      }
+
+      const features = dataToExport.map(row => ({
+        "type": "Feature",
+        "geometry": {
+          "type": "Point",
+          "coordinates": [parseFloat(row.lng), parseFloat(row.lat)]
+        },
+        "properties": {
+          "Name": row.name,
+          "Kategori": row.kategori || "",
+          "Kecamatan": row.kecamatan || "",
+          "Address": row.address,
+          "Link": row.link
+        }
+      }));
+
+      const geojson = {
+        "type": "FeatureCollection",
+        "features": features
+      };
+
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(geojson, null, 2));
+      const downloadAnchorNode = document.createElement('a');
+      downloadAnchorNode.setAttribute("href", dataStr);
+      downloadAnchorNode.setAttribute("download", `Data_Maps_${target}_${new Date().toISOString().slice(0,10)}.geojson`);
+      document.body.appendChild(downloadAnchorNode);
+      downloadAnchorNode.click();
+      downloadAnchorNode.remove();
+      showToast('Berhasil export ke GeoJSON!');
+    }
+
+    function exportToKML(target) {
+      const dataToExport = target === 'archive' ? archiveData : tableData;
+      if (dataToExport.length === 0) {
+        showToast('Data masih kosong!', 'error');
+        return;
+      }
+
+      let kml = `<?xml version="1.0" encoding="UTF-8"?>\n<kml xmlns="http://www.opengis.net/kml/2.2">\n  <Document>\n    <name>Data Maps ${target}</name>\n`;
+
+      dataToExport.forEach(row => {
+        kml += `    <Placemark>\n`;
+        kml += `      <name>${row.name.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</name>\n`;
+        kml += `      <description><![CDATA[\n`;
+        kml += `        <b>Kategori:</b> ${row.kategori || '-'}<br/>\n`;
+        kml += `        <b>Kecamatan:</b> ${row.kecamatan || '-'}<br/>\n`;
+        kml += `        <b>Alamat:</b> ${row.address}<br/>\n`;
+        kml += `        <b>Link:</b> <a href="${row.link}">${row.link}</a>\n`;
+        kml += `      ]]></description>\n`;
+        kml += `      <Point>\n`;
+        kml += `        <coordinates>${row.lng},${row.lat},0</coordinates>\n`;
+        kml += `      </Point>\n`;
+        kml += `    </Placemark>\n`;
+      });
+
+      kml += `  </Document>\n</kml>`;
+
+      const dataStr = "data:application/vnd.google-earth.kml+xml;charset=utf-8," + encodeURIComponent(kml);
+      const downloadAnchorNode = document.createElement('a');
+      downloadAnchorNode.setAttribute("href", dataStr);
+      downloadAnchorNode.setAttribute("download", `Data_Maps_${target}_${new Date().toISOString().slice(0,10)}.kml`);
+      document.body.appendChild(downloadAnchorNode);
+      downloadAnchorNode.click();
+      downloadAnchorNode.remove();
+      showToast('Berhasil export ke KML!');
     }
 
     function copyAllFormatted() {
