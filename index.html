@@ -636,37 +636,6 @@
       </div>
     </div>
 
-    <!-- Dropdown Kategori -->
-    <div class="input-group">
-      <label for="kategoriSelect">Kategori Fasilitas</label>
-      <select id="kategoriSelect" onchange="toggleCustomCategory()">
-        <option value="">-- Pilih Kategori --</option>
-        <option value="Fasilitas Pendidikan">Fasilitas Pendidikan</option>
-        <option value="Fasilitas Kesehatan">Fasilitas Kesehatan</option>
-        <option value="Fasilitas Keagamaan">Fasilitas Keagamaan</option>
-        <option value="Kantor Pemerintahan / Pelayanan Publik">Kantor Pemerintahan / Pelayanan Publik</option>
-        <option value="Infrastruktur & Fasilitas Umum">Infrastruktur & Fasilitas Umum</option>
-        <option value="Lainnya">Lainnya (Custom Input)</option>
-      </select>
-      <input type="text" id="customKategori" placeholder="Masukkan Kategori Kustom..." style="display: none; margin-top: 8px;">
-    </div>
-
-    <!-- Dropdown Kecamatan -->
-    <div class="input-group">
-      <label for="kecamatanSelect">Wilayah (Kecamatan)</label>
-      <select id="kecamatanSelect">
-        <option value="">-- Pilih Kecamatan --</option>
-        <option value="Sumber">Sumber</option>
-        <option value="Talun">Talun</option>
-        <option value="Plumbon">Plumbon</option>
-        <option value="Weru">Weru</option>
-        <option value="Kedawung">Kedawung</option>
-        <option value="Mundu">Mundu</option>
-        <option value="Gunung Jati">Gunung Jati</option>
-        <option value="Lainnya">Lainnya...</option>
-      </select>
-    </div>
-
     <div class="action-buttons-container">
       <button class="btn-process" onclick="parseGmapsLink()">Proses Link</button>
       <button id="btn-confirm-send" class="btn-send-sheets" onclick="addToTable()">Tambahkan ke Tabel</button>
@@ -735,26 +704,6 @@
         <h3 id="tab-archive" onclick="switchTab('archive')" style="cursor: pointer; margin: 0; font-size: 1.1rem; color: var(--text-muted); padding-bottom: 4px; transition: all 0.3s ease; border-bottom: 2px solid transparent;">Arsip Riwayat</h3>
       </div>
       <div class="table-actions" id="current-actions" style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 10px;">
-        <select id="filterKategori" onchange="renderTable()" style="padding: 8px; border-radius: 6px; font-size: 0.85rem; width: 130px; height: 35px; min-width: unset; flex: unset;">
-          <option value="all">All Kategori</option>
-          <option value="Fasilitas Pendidikan">Pendidikan</option>
-          <option value="Fasilitas Kesehatan">Kesehatan</option>
-          <option value="Fasilitas Keagamaan">Keagamaan</option>
-          <option value="Kantor Pemerintahan / Pelayanan Publik">Pemerintahan</option>
-          <option value="Infrastruktur & Fasilitas Umum">Infrastruktur</option>
-          <option value="Lainnya">Lainnya</option>
-        </select>
-        <select id="filterKecamatan" onchange="renderTable()" style="padding: 8px; border-radius: 6px; font-size: 0.85rem; width: 130px; height: 35px; min-width: unset; flex: unset;">
-          <option value="all">All Kecamatan</option>
-          <option value="Sumber">Sumber</option>
-          <option value="Talun">Talun</option>
-          <option value="Plumbon">Plumbon</option>
-          <option value="Weru">Weru</option>
-          <option value="Kedawung">Kedawung</option>
-          <option value="Mundu">Mundu</option>
-          <option value="Gunung Jati">Gunung Jati</option>
-          <option value="Lainnya">Lainnya...</option>
-        </select>
         <button class="btn-process" onclick="exportToGeoJSON('current')" style="padding: 8px 15px; font-size: 0.85rem; width: auto; background-color: #3b82f6; color: white;">Export GeoJSON</button>
         <button class="btn-process" onclick="exportToKML('current')" style="padding: 8px 15px; font-size: 0.85rem; width: auto; background-color: #8b5cf6; color: white;">Export KML</button>
         
@@ -775,8 +724,6 @@
           <tr>
             <th>No</th>
             <th>Nama Tempat</th>
-            <th>Kategori</th>
-            <th>Kecamatan</th>
             <th>Alamat Lengkap</th>
             <th>Link Google Maps</th>
             <th>Latitude</th>
@@ -796,8 +743,6 @@
             <th>No</th>
             <th>Tanggal</th>
             <th>Nama Tempat</th>
-            <th>Kategori</th>
-            <th>Kecamatan</th>
             <th>Alamat Lengkap</th>
             <th>Link Google Maps</th>
             <th>Latitude</th>
@@ -1013,38 +958,15 @@
       }
     }
 
-    const categoryColors = {
-      'Fasilitas Pendidikan': '#3b82f6', // blue
-      'Fasilitas Kesehatan': '#ef4444', // red
-      'Fasilitas Keagamaan': '#10b981', // green
-      'Kantor Pemerintahan / Pelayanan Publik': '#f59e0b', // orange
-      'Infrastruktur & Fasilitas Umum': '#8b5cf6', // purple
-      'Lainnya': '#6b7280' // gray
-    };
-
-    function getCustomIcon(color) {
-      const svgIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="${color}" width="32px" height="32px"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>`;
-      const url = "data:image/svg+xml;base64," + btoa(svgIcon);
-      return L.icon({
-        iconUrl: url,
-        iconSize: [32, 32],
-        iconAnchor: [16, 32],
-        popupAnchor: [0, -32]
-      });
-    }
-
-    function addMarker(lat, lng, title, kategori, kecamatan) {
+    function addMarker(lat, lng, title) {
       initMap();
-      const color = categoryColors[kategori] || '#6b7280';
       const popupContent = `
         <div style="font-family: Outfit, sans-serif; font-size: 13px; color: #333;">
           <strong style="font-size: 15px; color: #000;">${title}</strong><br/>
-          <b>Kategori:</b> ${kategori || '-'}<br/>
-          <b>Kecamatan:</b> ${kecamatan || '-'}<br/>
           <b>Lat/Lng:</b> ${lat}, ${lng}
         </div>
       `;
-      const marker = L.marker([lat, lng], {icon: getCustomIcon(color)}).bindPopup(popupContent);
+      const marker = L.marker([lat, lng]).bindPopup(popupContent);
       leafMarkers.addLayer(marker);
       leafMap.fitBounds(leafMarkers.getBounds(), {padding: [30, 30], maxZoom: 16});
     }
@@ -1054,9 +976,6 @@
       const apiKey = document.getElementById('apiKey').value.trim();
       const resultsCard = document.getElementById('resultsCard');
       const loader = document.getElementById('loader');
-      
-      const kategori = getSelectedKategori();
-      const kecamatan = getSelectedKecamatan();
 
       if (!inputText) {
         showToast('Masukkan setidaknya satu URL Google Maps!');
@@ -1165,7 +1084,7 @@
               }
             }
             
-            addMarker(parseFloat(lat), parseFloat(lng), name !== 'Tidak ditemukan' ? name : address, kategori, kecamatan);
+            addMarker(parseFloat(lat), parseFloat(lng), name !== 'Tidak ditemukan' ? name : address);
           } else {
             address = 'Koordinat tidak ditemukan.';
           }
@@ -1375,28 +1294,6 @@
       localStorage.setItem('gmaps_table_data', JSON.stringify(tableData));
     }
     
-    function toggleCustomCategory() {
-      const select = document.getElementById('kategoriSelect');
-      const customInput = document.getElementById('customKategori');
-      if (select.value === 'Lainnya') {
-        customInput.style.display = 'block';
-      } else {
-        customInput.style.display = 'none';
-      }
-    }
-
-    function getSelectedKategori() {
-      const select = document.getElementById('kategoriSelect');
-      if (select.value === 'Lainnya') {
-        return document.getElementById('customKategori').value.trim() || 'Lainnya';
-      }
-      return select.value;
-    }
-
-    function getSelectedKecamatan() {
-      return document.getElementById('kecamatanSelect').value;
-    }
-
     function normalizeString(str) {
       if (!str) return '';
       return str.toLowerCase().replace(/[^a-z0-9]/g, '');
@@ -1425,19 +1322,8 @@
       const lng = parseFloat(lngText);
       const link = document.getElementById('resLink').textContent;
       
-      const kategori = getSelectedKategori();
-      const kecamatan = getSelectedKecamatan();
-
       if (name === '-' || name === 'Tidak ditemukan') {
         showToast('Belum ada data lokasi yang valid diproses!', 'error');
-        return;
-      }
-      if (!kategori) {
-        showToast('Harap pilih Kategori Fasilitas terlebih dahulu!', 'error');
-        return;
-      }
-      if (!kecamatan) {
-        showToast('Harap pilih Wilayah Kecamatan terlebih dahulu!', 'error');
         return;
       }
 
@@ -1471,7 +1357,7 @@
       }
 
       const row = {
-        name, kategori, kecamatan, address, link, lat: latText, lng: lngText
+        name, address, link, lat: latText, lng: lngText
       };
       
       tableData.push(row);
@@ -1491,19 +1377,11 @@
       const tbody = document.getElementById('tableBody');
       tbody.innerHTML = '';
       
-      const filterKat = document.getElementById('filterKategori') ? document.getElementById('filterKategori').value : 'all';
-      const filterKec = document.getElementById('filterKecamatan') ? document.getElementById('filterKecamatan').value : 'all';
-      
       tableData.forEach((row, index) => {
-        if (filterKat !== 'all' && row.kategori !== filterKat && !(filterKat === 'Lainnya' && !['Fasilitas Pendidikan', 'Fasilitas Kesehatan', 'Fasilitas Keagamaan', 'Kantor Pemerintahan / Pelayanan Publik', 'Infrastruktur & Fasilitas Umum'].includes(row.kategori))) return;
-        if (filterKec !== 'all' && row.kecamatan !== filterKec && !(filterKec === 'Lainnya' && !['Sumber', 'Talun', 'Plumbon', 'Weru', 'Kedawung', 'Mundu', 'Gunung Jati'].includes(row.kecamatan))) return;
-
         const tr = document.createElement('tr');
         tr.innerHTML = `
           <td>${index + 1}</td>
           <td>${row.name}</td>
-          <td>${row.kategori || '-'}</td>
-          <td>${row.kecamatan || '-'}</td>
           <td>${row.address}</td>
           <td><a href="${row.link}" target="_blank" style="color: var(--primary);">Buka Link</a></td>
           <td>${row.lat}</td>
@@ -1612,8 +1490,6 @@
         },
         "properties": {
           "Name": row.name,
-          "Kategori": row.kategori || "",
-          "Kecamatan": row.kecamatan || "",
           "Address": row.address,
           "Link": row.link
         }
@@ -1647,8 +1523,6 @@
         kml += `    <Placemark>\n`;
         kml += `      <name>${row.name.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</name>\n`;
         kml += `      <description><![CDATA[\n`;
-        kml += `        <b>Kategori:</b> ${row.kategori || '-'}<br/>\n`;
-        kml += `        <b>Kecamatan:</b> ${row.kecamatan || '-'}<br/>\n`;
         kml += `        <b>Alamat:</b> ${row.address}<br/>\n`;
         kml += `        <b>Link:</b> <a href="${row.link}">${row.link}</a>\n`;
         kml += `      ]]></description>\n`;
