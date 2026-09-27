@@ -4,1716 +4,377 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Extractor Link Google Maps</title>
-    <style>
-    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
+  <meta name="description"
+    content="Sistem Ekstraksi dan Pengolahan Data Geospasial Berbasis Web — Mengonversi tautan Google Maps menjadi data terstruktur dengan koordinat, reverse geocoding, deteksi duplikat, dan ekspor data." />
+  <title>Extractor Link Google Maps — Sistem Geospasial</title>
 
-    :root {
-      /* DEFAULT: Dark Mode (Emerald & Mint) */
-      --bg-color: #02160f;
-      --bg-gradient: radial-gradient(circle at 15% 0%, rgba(16, 185, 129, 0.2), transparent 45%),
-                     radial-gradient(circle at 90% 80%, rgba(20, 184, 166, 0.15), transparent 45%),
-                     radial-gradient(circle at 80% 10%, rgba(132, 204, 22, 0.15), transparent 45%);
-      --card-bg-rgb: 9, 26, 21; 
-      --card-bg: rgba(var(--card-bg-rgb), 0.65);
-      --primary: #10b981; /* Emerald */
-      --primary-hover: #14b8a6; /* Teal/Mint */
-      --text-main: #f8fafc;
-      --text-muted: #94a3b8;
-      --border-color: rgba(255, 255, 255, 0.12);
-      --border-focus: #10b981;
-      --success: #34d399;
-      --danger: #ef4444;
-      --glass-blur: blur(20px);
-      --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
-    }
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="css/style.css" />
 
-    [data-theme="light"] {
-      /* Light Mode (Pastel Green) - Dipertegas */
-      --bg-color: #e6f6ec;
-      --bg-gradient: radial-gradient(circle at 15% 0%, rgba(16, 185, 129, 0.2), transparent 45%),
-                     radial-gradient(circle at 90% 80%, rgba(20, 184, 166, 0.15), transparent 45%),
-                     radial-gradient(circle at 80% 10%, rgba(132, 204, 22, 0.15), transparent 45%);
-      --card-bg-rgb: 255, 255, 255;
-      --card-bg: rgba(255, 255, 255, 0.95);
-      --primary: #059669; /* Dark Emerald */
-      --primary-hover: #0f766e; /* Dark Teal */
-      --text-main: #022c22;
-      --text-muted: #334155;
-      --border-color: rgba(4, 47, 46, 0.4); /* Garis SANGAT tegas / gelap */
-      --border-focus: #059669;
-      --success: #10b981;
-      --danger: #dc2626;
-      --glass-blur: blur(20px);
-      --glass-shadow: 0 12px 35px 0 rgba(4, 47, 46, 0.15); /* Bayangan lebih nyata */
-    }
-
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
-    }
-
-    body {
-      background-color: var(--bg-color);
-      background-image: var(--bg-gradient);
-      background-size: 200% 200%;
-      background-attachment: fixed;
-      color: var(--text-main);
-      display: flex;
-      justify-content: center;
-      align-items: flex-start;
-      min-height: 100vh;
-      padding: 20px;
-      transition: background-color 0.4s ease, color 0.4s ease, background-image 0.4s ease;
-      animation: auroraMove 15s ease infinite alternate;
-    }
-
-    @keyframes auroraMove {
-      0% { background-position: 0% 0%; }
-      50% { background-position: 100% 100%; }
-      100% { background-position: 0% 100%; }
-    }
-
-    .main-wrapper {
-      display: flex;
-      flex-direction: row;
-      gap: 20px;
-      width: 100%;
-      max-width: 1400px;
-      align-items: stretch;
-      margin: 0 auto;
-      height: calc(100vh - 40px);
-    }
-
-    .container, .table-container {
-      background-color: var(--card-bg);
-      backdrop-filter: var(--glass-blur);
-      -webkit-backdrop-filter: var(--glass-blur);
-      border: 1px solid var(--border-color);
-      border-radius: 16px;
-      padding: 24px;
-      box-shadow: var(--glass-shadow);
-      transition: background-color 0.4s ease, border-color 0.4s ease;
-    }
-
-    .container {
-      width: 100%;
-      max-width: 500px;
-      flex-shrink: 0;
-      position: relative;
-      overflow-y: auto;
-    }
-
-    .container::-webkit-scrollbar, .excel-table-wrapper::-webkit-scrollbar {
-      width: 6px;
-      height: 6px;
-    }
-    .container::-webkit-scrollbar-thumb, .excel-table-wrapper::-webkit-scrollbar-thumb {
-      background: var(--border-color);
-      border-radius: 4px;
-    }
-
-    .table-container {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-    }
-
-    .table-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 20px;
-    }
-
-    .table-header h3 {
-      color: var(--primary);
-      font-weight: 600;
-      letter-spacing: 0.5px;
-    }
-
-    .table-actions {
-      display: flex;
-      gap: 10px;
-    }
-
-    .excel-table-wrapper {
-      flex: 1;
-      overflow: auto;
-      border: 1px solid var(--border-color);
-      border-radius: 12px;
-      background: rgba(var(--card-bg-rgb), 0.3);
-    }
-
-    table.excel-table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 0.9rem;
-    }
-
-    table.excel-table th, table.excel-table td {
-      border-bottom: 1px solid var(--border-color);
-      padding: 14px 12px;
-      text-align: left;
-    }
-
-    table.excel-table th {
-      background-color: rgba(var(--card-bg-rgb), 0.95);
-      backdrop-filter: blur(10px);
-      color: var(--primary);
-      position: sticky;
-      top: 0;
-      z-index: 10;
-      font-weight: 600;
-      letter-spacing: 0.5px;
-      box-shadow: 0 1px 0 var(--border-color);
-    }
-
-    table.excel-table tbody tr {
-      transition: background-color 0.2s ease;
-    }
-
-    table.excel-table tbody tr:hover {
-      background-color: rgba(56, 189, 248, 0.05);
-    }
-
-    .header {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      margin-bottom: 25px;
-    }
-
-    .header-text {
-      padding-right: 40px;
-    }
-
-    .header h2 {
-      font-size: 1.6rem;
-      font-weight: 700;
-      color: var(--primary);
-      margin-bottom: 8px;
-      letter-spacing: -0.5px;
-    }
-
-    .header p {
-      font-size: 0.9rem;
-      color: var(--text-muted);
-      font-weight: 400;
-    }
-
-    .input-group {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      margin-bottom: 22px;
-    }
-
-    .input-group label {
-      font-size: 0.85rem;
-      font-weight: 500;
-      color: var(--text-main);
-      letter-spacing: 0.3px;
-    }
-
-    input[type="text"],
-    input[type="url"],
-    input[type="password"] {
-      flex: 1;
-      padding: 14px 16px;
-      border-radius: 10px;
-      border: 1px solid var(--border-color);
-      background-color: rgba(var(--card-bg-rgb), 0.4);
-      color: var(--text-main);
-      font-size: 0.95rem;
-      outline: none;
-      transition: all 0.3s ease;
-      box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
-    }
-
-    input[type="text"]:focus,
-    input[type="url"]:focus,
-    input[type="password"]:focus {
-      border-color: var(--border-focus);
-      box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.15);
-      background-color: rgba(var(--card-bg-rgb), 0.8);
-    }
-
-    select {
-      flex: 1;
-      padding: 14px 16px;
-      border-radius: 10px;
-      border: 1px solid var(--border-color);
-      background-color: rgba(var(--card-bg-rgb), 0.4);
-      color: var(--text-main);
-      font-size: 0.95rem;
-      outline: none;
-      transition: all 0.3s ease;
-      appearance: none;
-    }
-
-    select:focus {
-      border-color: var(--border-focus);
-      background-color: rgba(var(--card-bg-rgb), 0.8);
-    }
-
-    select option {
-      background-color: #02160f; /* Dark theme default for options */
-      color: #f8fafc;
-    }
-    [data-theme="light"] select option {
-      background-color: #ffffff;
-      color: #022c22;
-    }
-
-    button {
-      padding: 12px 20px;
-      background-color: var(--primary);
-      color: #0f172a;
-      font-weight: 600;
-      border: none;
-      border-radius: 10px;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      gap: 8px;
-    }
-
-    button:hover {
-      background-color: var(--primary-hover);
-      color: #ffffff;
-      transform: translateY(-1px);
-      box-shadow: 0 4px 12px rgba(56, 189, 248, 0.2);
-    }
-
-    button:active {
-      transform: translateY(1px);
-      box-shadow: none;
-    }
-
-    .btn-copy {
-      background: transparent;
-      border: 1px solid var(--border-color);
-      color: var(--primary);
-      padding: 8px 14px;
-      font-size: 0.8rem;
-      border-radius: 8px;
-      flex-shrink: 0;
-    }
-
-    .btn-copy:hover {
-      background-color: rgba(56, 189, 248, 0.1);
-      border-color: var(--primary);
-      color: var(--primary);
-    }
-
-    .btn-delete {
-      background-color: transparent;
-      color: var(--danger);
-      border: 1px solid rgba(239, 68, 68, 0.3);
-      padding: 8px 14px;
-      border-radius: 8px;
-      font-size: 0.8rem;
-      font-weight: 600;
-    }
-
-    .btn-delete:hover {
-      background-color: var(--danger);
-      color: #ffffff;
-      border-color: var(--danger);
-      box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
-    }
-
-    .action-buttons-container {
-      display: flex;
-      gap: 10px;
-      margin-top: 15px;
-    }
-
-    .btn-process, .btn-send-sheets {
-      flex: 1;
-      width: 100%;
-    }
-
-    .btn-process {
-      background: linear-gradient(135deg, var(--primary), var(--primary-hover));
-      color: #ffffff;
-      font-size: 0.95rem;
-      padding: 14px;
-      box-shadow: 0 4px 15px rgba(56, 189, 248, 0.25);
-    }
-    .btn-process:hover {
-      box-shadow: 0 6px 20px rgba(56, 189, 248, 0.4);
-    }
-
-    .btn-send-sheets {
-      width: 100%;
-      background: linear-gradient(135deg, #10b981, #059669);
-      color: white;
-      font-size: 0.95rem;
-      padding: 14px;
-      box-shadow: 0 4px 15px rgba(16, 185, 129, 0.25);
-    }
-    .btn-send-sheets:hover {
-      box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
-    }
-
-    .loader {
-      display: none;
-      text-align: center;
-      padding: 30px 20px;
-      color: var(--primary);
-      font-size: 0.9rem;
-      font-weight: 500;
-      animation: pulse 1.5s infinite ease-in-out;
-    }
-    
-    .loader-spinner {
-      border: 3px solid rgba(56, 189, 248, 0.2);
-      border-top: 3px solid var(--primary);
-      border-radius: 50%;
-      width: 28px;
-      height: 28px;
-      animation: spin 1s linear infinite;
-      margin: 0 auto 12px;
-    }
-    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
-
-    .results-card {
-      display: none;
-      background: rgba(var(--card-bg-rgb), 0.4);
-      border: 1px solid var(--border-color);
-      border-radius: 12px;
-      padding: 20px;
-      margin-top: 15px;
-      animation: fadeIn 0.4s ease forwards;
-    }
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    .field-row {
-      margin-bottom: 16px;
-    }
-
-    .field-row label {
-      display: block;
-      font-size: 0.75rem;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      color: var(--text-muted);
-      margin-bottom: 6px;
-      font-weight: 600;
-    }
-
-    .field-content {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      background-color: rgba(var(--card-bg-rgb), 0.6);
-      border: 1px solid var(--border-color);
-      border-radius: 8px;
-      padding: 10px 14px;
-      transition: all 0.3s ease;
-    }
-    .field-content:hover {
-      border-color: rgba(56, 189, 248, 0.4);
-      background-color: rgba(var(--card-bg-rgb), 0.8);
-    }
-
-    .field-value {
-      font-size: 0.95rem;
-      color: var(--text-main);
-      word-break: break-all;
-      margin-right: 12px;
-      font-weight: 500;
-    }
-
-    .btn-copy-all {
-      width: 100%;
-      padding: 14px;
-      background-color: rgba(56, 189, 248, 0.1);
-      color: var(--primary);
-      border: 1px dashed var(--primary);
-      border-radius: 10px;
-      font-weight: 600;
-      margin-top: 20px;
-      box-shadow: none;
-    }
-    .btn-copy-all:hover {
-      background-color: var(--primary);
-      color: #ffffff;
-      border-style: solid;
-    }
-
-    /* Theme Toggle Button */
-    .theme-toggle-btn {
-      background: rgba(var(--card-bg-rgb), 0.5);
-      border: 1px solid var(--border-color);
-      color: var(--text-main);
-      font-size: 1.2rem;
-      border-radius: 50%;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 44px;
-      height: 44px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-    }
-    .theme-toggle-btn:hover {
-      background: var(--border-color);
-      transform: rotate(15deg) scale(1.05);
-    }
-
-    .modal-overlay {
-      display: none;
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0, 0, 0, 0.4);
-      z-index: 1000;
-      justify-content: center;
-      align-items: center;
-      backdrop-filter: blur(8px);
-      -webkit-backdrop-filter: blur(8px);
-      animation: fadeIn 0.3s ease;
-    }
-
-    .modal-content {
-      width: 95%;
-      max-width: 600px;
-      max-height: 90vh;
-      border-radius: 16px;
-      position: relative;
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-      animation: slideUpModal 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-      background-color: var(--card-bg);
-      backdrop-filter: var(--glass-blur);
-      border: 1px solid var(--border-color);
-      box-shadow: var(--glass-shadow);
-    }
-    @keyframes slideUpModal {
-      from { opacity: 0; transform: translateY(30px) scale(0.95); }
-      to { opacity: 1; transform: translateY(0) scale(1); }
-    }
-
-    .toast {
-      position: fixed;
-      bottom: 30px;
-      right: 30px;
-      background-color: var(--success);
-      color: #ffffff;
-      padding: 14px 24px;
-      border-radius: 10px;
-      font-size: 0.95rem;
-      font-weight: 600;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      box-shadow: 0 10px 25px rgba(16, 185, 129, 0.4);
-      z-index: 9999;
-      transform: translateY(100px);
-      opacity: 0;
-      transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s ease;
-    }
-    .toast.show {
-      transform: translateY(0);
-      opacity: 1;
-    }
-    .toast.error {
-      background-color: var(--danger);
-      box-shadow: 0 10px 25px rgba(239, 68, 68, 0.4);
-    }
-
-    @media (max-width: 1024px) {
-      .main-wrapper {
-        flex-direction: column;
-        height: auto;
-      }
-      .container {
-        max-width: 100%;
-        overflow-y: visible;
-      }
-      .table-container {
-        height: 600px;
-      }
-    }
-
-    @media (max-width: 600px) {
-      body { padding: 12px; }
-      .container, .table-container { padding: 16px; }
-      .header { flex-direction: column; gap: 12px; }
-      .header-text { padding-right: 0; }
-      .theme-toggle-btn { position: absolute; top: 16px; right: 16px; }
-      .input-row { flex-wrap: wrap; }
-      .input-row > input { min-width: 100%; margin-bottom: 10px !important; }
-      .input-row > button { flex: 1; }
-      .action-buttons-container { flex-direction: column !important; }
-    }
-  </style>
+  <!-- SheetJS untuk Export Excel -->
   <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
 
   <!-- Leaflet CSS & JS -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 </head>
 
 <body>
 
+  <!-- Inisialisasi tema sebelum DOM dimuat (mencegah flash) -->
   <script>
-    // Inisialisasi tema sebelum DOM selesai dimuat untuk menghindari flash
-    const savedTheme = localStorage.getItem('app-theme') || 'dark';
-    if (savedTheme === 'light') {
-      document.documentElement.setAttribute('data-theme', 'light');
-    }
-
-    function toggleTheme() {
-      const currentTheme = document.documentElement.getAttribute('data-theme');
-      const newTheme = currentTheme === 'light' ? 'dark' : 'light';
-      document.documentElement.setAttribute('data-theme', newTheme);
-      localStorage.setItem('app-theme', newTheme);
-      document.getElementById('theme-toggle').textContent = newTheme === 'light' ? '☀️' : '🌙';
-    }
-
-    // Set initial icon
-    window.addEventListener('DOMContentLoaded', () => {
+    (function () {
       const savedTheme = localStorage.getItem('app-theme') || 'dark';
-      document.getElementById('theme-toggle').textContent = savedTheme === 'light' ? '☀️' : '🌙';
-    });
+      if (savedTheme === 'light') {
+        document.documentElement.setAttribute('data-theme', 'light');
+      }
+    })();
   </script>
 
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <!-- MAIN WRAPPER                                               -->
+  <!-- ═══════════════════════════════════════════════════════════ -->
   <div class="main-wrapper">
+
+    <!-- ─────────────────────────────── LEFT PANEL ─── -->
     <div class="container">
-    <div class="header">
-      <div class="header-text">
-        <h2>Extractor Link Google Maps</h2>
-        <p>Sistem ekstraksi data geospasial berbasis web yang dirancang untuk mengonversi tautan Google Maps menjadi entitas data terstruktur—meliputi identitas lokasi, deskripsi wilayah, serta parameter koordinat lintang dan bujur—guna mempermudah kompilasi dan ekspor data ke lembar kerja Excel.</p>
+
+      <!-- Header -->
+      <div class="header">
+        <div class="header-text">
+          <h2>Extractor Link Google Maps</h2>
+          <p>Sistem ekstraksi data geospasial berbasis web. Mengonversi tautan Google Maps menjadi
+            entitas data terstruktur meliputi koordinat, alamat, dan metadata lokasi.</p>
+        </div>
+        <button class="theme-toggle-btn" id="theme-toggle" onclick="toggleTheme()" title="Ubah Tema">🌙</button>
       </div>
-      <button class="theme-toggle-btn" id="theme-toggle" onclick="toggleTheme()" title="Ubah Tema">🌙</button>
-    </div>
 
-    <!-- 1. API Key Config -->
-    <div class="input-group">
-      <label for="apiKey">Google Maps / DistanceMatrix API Key <span
-          style="font-size: 0.8em; font-weight:normal; color:#94a3b8;">(Disimpan otomatis)</span></label>
-      <div class="input-row" style="display: flex; gap: 8px;">
-        <input type="password" id="apiKey" placeholder="Masukkan API Key (AIza... atau Elhv...)"
-          style="flex: 1; margin: 0;" />
-        <button class="btn-copy" onclick="pasteApiKey()" style="padding: 0 15px; cursor: pointer;">Paste</button>
-        <button class="btn-delete" onclick="resetApiKey()"
-          title="Hapus API Key saat ini jika limit habis">Hapus</button>
+      <!-- 1. Input API Key -->
+      <div class="input-group">
+        <label for="apiKey">Google Maps / DistanceMatrix API Key <span
+            style="font-size: 0.8em; font-weight:normal; color:#94a3b8;">(Disimpan otomatis)</span></label>
+        <div class="input-row" style="display: flex; gap: 8px;">
+          <input type="password" id="apiKey" placeholder="Masukkan API Key (AIza... atau Elhv...)"
+            style="flex: 1; margin: 0;" />
+          <button class="btn-copy" onclick="pasteApiKey()" style="padding: 0 15px; cursor: pointer;">Paste</button>
+          <button class="btn-delete" onclick="resetApiKey()" title="Hapus API Key saat ini jika limit habis">Hapus</button>
+        </div>
+        <div style="margin-top: 6px; font-size: 0.85rem; color: var(--text-muted);">
+          Bagaimana cara mendapatkan key nya? <a href="#" onclick="openApiKeyModal(); return false;"
+            style="color: var(--primary); text-decoration: none;">Klik disini</a>
+        </div>
       </div>
-      <div style="margin-top: 6px; font-size: 0.85rem; color: var(--text-muted);">
-        Bagaimana cara mendapatkan key nya? <a href="#" onclick="openApiKeyModal(); return false;"
-          style="color: var(--primary); text-decoration: none;">Klik disini</a>
-      </div>
-    </div>
 
-
-
-    <!-- 3. Google Maps Link Input -->
-    <div class="input-group">
-      <label for="gmapsUrl">Paste Link Google Maps (Gunakan Link Panjang)</label>
-      <div class="input-row" style="display: flex; gap: 8px;">
-        <textarea id="gmapsUrl" rows="3" placeholder="https://www.google.com/maps/place/...
+      <!-- 2. Input URL Google Maps -->
+      <div class="input-group">
+        <label for="gmapsUrl">Paste Link Google Maps (Gunakan Link Panjang)</label>
+        <div class="input-row" style="display: flex; gap: 8px;">
+          <textarea id="gmapsUrl" rows="3"
+            placeholder="https://www.google.com/maps/place/...
 (Pisahkan antar link dengan Enter. Maksimal 10 link)"
-          style="flex: 1; margin: 0; padding: 12px; border-radius: 8px; border: 1px solid var(--border-color); background-color: rgba(var(--card-bg-rgb), 0.4); color: var(--text-main); font-size: 0.95rem; outline: none; transition: all 0.3s ease; resize: vertical;"></textarea>
-        <button class="btn-copy" onclick="pasteFromClipboard()" style="padding: 0 15px; cursor: pointer;">Paste</button>
-        <button class="btn-delete" onclick="resetForm()">Hapus</button>
-      </div>
-    </div>
-
-    <div class="action-buttons-container">
-      <button class="btn-process" onclick="parseGmapsLink()">Proses Link</button>
-      <button id="btn-confirm-send" class="btn-send-sheets" onclick="addToTable()">Tambahkan ke Tabel</button>
-    </div>
-
-    <div id="loader" class="loader">
-      <div class="loader-spinner"></div>
-      Membaca koordinat & menghubungi Google API...
-    </div>
-
-    <div id="resultsCard" class="results-card">
-      <div class="field-row">
-        <label>Nama Lokasi</label>
-        <div class="field-content">
-          <span id="resName" class="field-value">-</span>
-          <button class="btn-copy" onclick="copyText('resName')">Copy</button>
+            style="flex: 1; margin: 0; padding: 12px; border-radius: 8px; border: 1px solid var(--border-color); background-color: rgba(var(--card-bg-rgb), 0.4); color: var(--text-main); font-size: 0.95rem; outline: none; transition: all 0.3s ease; resize: vertical;"></textarea>
+          <button class="btn-copy" onclick="pasteFromClipboard()"
+            style="padding: 0 15px; cursor: pointer;">Paste</button>
+          <button class="btn-delete" onclick="resetForm()">Hapus</button>
         </div>
       </div>
 
-      <div class="field-row">
-        <label>Alamat Lengkap (Resmi dari Google)</label>
-        <div class="field-content">
-          <span id="resAddress" class="field-value">-</span>
-          <button class="btn-copy" onclick="copyText('resAddress')">Copy</button>
+      <!-- Tombol Proses -->
+      <div class="action-buttons-container">
+        <button class="btn-process" onclick="parseGmapsLink()">Proses Link</button>
+        <button id="btn-confirm-send" class="btn-send-sheets" onclick="addToTable()">Tambahkan ke Tabel</button>
+      </div>
+
+      <!-- Loader -->
+      <div id="loader" class="loader">
+        <div class="loader-spinner"></div>
+        Membaca koordinat &amp; menghubungi Google API...
+      </div>
+
+      <!-- Preview Hasil Ekstraksi -->
+      <div id="resultsCard" class="results-card">
+        <div class="field-row">
+          <label>Nama Lokasi</label>
+          <div class="field-content">
+            <span id="resName" class="field-value">-</span>
+            <button class="btn-copy" onclick="copyText('resName')">Copy</button>
+          </div>
+        </div>
+        <div class="field-row">
+          <label>Alamat Lengkap (Resmi dari Google)</label>
+          <div class="field-content">
+            <span id="resAddress" class="field-value">-</span>
+            <button class="btn-copy" onclick="copyText('resAddress')">Copy</button>
+          </div>
+        </div>
+        <div class="field-row">
+          <label>Latitude</label>
+          <div class="field-content">
+            <span id="resLat" class="field-value">-</span>
+            <button class="btn-copy" onclick="copyText('resLat')">Copy</button>
+          </div>
+        </div>
+        <div class="field-row">
+          <label>Longitude</label>
+          <div class="field-content">
+            <span id="resLng" class="field-value">-</span>
+            <button class="btn-copy" onclick="copyText('resLng')">Copy</button>
+          </div>
+        </div>
+        <div class="field-row">
+          <label>Pasted Link</label>
+          <div class="field-content">
+            <span id="resLink" class="field-value">-</span>
+            <button class="btn-copy" onclick="copyText('resLink')">Copy</button>
+          </div>
+        </div>
+        <button class="btn-copy-all" onclick="copyAllFormatted()">📋 COPY SEMUA FORMAT REKAP</button>
+      </div>
+
+      <!-- Peta WebGIS -->
+      <div id="mapContainer"
+        style="width: 100%; height: 250px; margin-top: 15px; border-radius: 12px; border: 1px solid var(--border-color); display: none; overflow: hidden; box-shadow: var(--glass-shadow);">
+        <div id="map" style="width: 100%; height: 100%;"></div>
+      </div>
+
+    </div> <!-- /container -->
+
+    <!-- ─────────────────────────────── RIGHT PANEL ─── -->
+    <div class="table-container">
+
+      <!-- Tab + Actions Header -->
+      <div class="table-header" style="flex-direction: column; align-items: flex-start; gap: 12px;">
+
+        <!-- Tab Navigation -->
+        <div style="display: flex; gap: 20px; align-items: center; width: 100%;">
+          <h3 id="tab-current" onclick="switchTab('current')"
+            style="cursor: pointer; margin: 0; font-size: 1.1rem; color: var(--primary); border-bottom: 2px solid var(--primary); padding-bottom: 4px; transition: all 0.3s ease;">
+            Data Tabel</h3>
+          <h3 id="tab-archive" onclick="switchTab('archive')"
+            style="cursor: pointer; margin: 0; font-size: 1.1rem; color: var(--text-muted); padding-bottom: 4px; transition: all 0.3s ease; border-bottom: 2px solid transparent;">
+            Arsip Riwayat</h3>
+        </div>
+
+        <!-- Actions: Tab Current -->
+        <div class="table-actions" id="current-actions"
+          style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+          <button class="btn-process" onclick="handleExportGeoJSON('current')"
+            style="padding: 8px 15px; font-size: 0.85rem; width: auto; background-color: #3b82f6; color: white;">Export
+            GeoJSON</button>
+          <button class="btn-process" onclick="handleExportKML('current')"
+            style="padding: 8px 15px; font-size: 0.85rem; width: auto; background-color: #8b5cf6; color: white;">Export
+            KML</button>
+          <input type="text" id="exportFileName" placeholder="Nama File (Wajib)"
+            style="padding: 8px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-color); color: var(--text-main); font-size: 0.85rem; width: 140px; outline: none; height: 35px;">
+          <button class="btn-process" onclick="handleExportExcel()"
+            style="padding: 8px 15px; font-size: 0.85rem; width: auto; background-color: #10b981; color: white;">Export
+            Excel</button>
+          <button class="btn-delete" onclick="clearTable()"
+            style="padding: 8px 15px; background-color: transparent; border: 1px solid #ef4444;">Bersihkan</button>
+          <div style="border-left: 1px solid var(--border-color); height: 35px; margin: 0 5px;"></div>
+          <input type="file" id="excelUpload" accept=".xlsx, .xls" style="display: none;"
+            onchange="handleConvertExcelToKML(event)">
+          <button class="btn-process" onclick="document.getElementById('excelUpload').click()"
+            style="padding: 8px 15px; font-size: 0.85rem; width: auto; background-color: #f59e0b; color: white;">Excel
+            To KML</button>
+        </div>
+
+        <!-- Actions: Tab Archive -->
+        <div class="table-actions" id="archive-actions"
+          style="display: none; gap: 10px; align-items: center; flex-wrap: wrap;">
+          <button class="btn-process" onclick="handleExportGeoJSON('archive')"
+            style="padding: 8px 15px; font-size: 0.85rem; width: auto; background-color: #3b82f6; color: white;">Export
+            GeoJSON Arsip</button>
+          <button class="btn-process" onclick="handleExportKML('archive')"
+            style="padding: 8px 15px; font-size: 0.85rem; width: auto; background-color: #8b5cf6; color: white;">Export
+            KML Arsip</button>
+          <button class="btn-process" onclick="handleExportArchiveExcel()"
+            style="padding: 8px 15px; font-size: 0.85rem; width: auto; background-color: #10b981; color: white;">Export
+            Excel Arsip</button>
+          <button class="btn-delete" onclick="clearArchive()"
+            style="padding: 8px 15px; background-color: transparent; border: 1px solid #ef4444;">Hapus Arsip</button>
+        </div>
+
+      </div><!-- /table-header -->
+
+      <!-- ── Dashboard Statistik ── -->
+      <div id="stats-dashboard" style="display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap;">
+        <div class="stat-box">
+          <h4>Total Data</h4>
+          <p id="stat-total" style="color: var(--primary);">0</p>
+        </div>
+        <div class="stat-box">
+          <h4>Valid</h4>
+          <p id="stat-valid" style="color: var(--success);">0</p>
+        </div>
+        <div class="stat-box">
+          <h4>Duplikat</h4>
+          <p id="stat-duplikat" style="color: #8b5cf6;">0</p>
+        </div>
+        <div class="stat-box">
+          <h4>Gagal Geocoding</h4>
+          <p id="stat-geofail" style="color: var(--danger);">0</p>
+        </div>
+        <div class="stat-box">
+          <h4>Invalid</h4>
+          <p id="stat-invalid" style="color: #f59e0b;">0</p>
+        </div>
+        <div class="stat-box">
+          <h4>Incomplete</h4>
+          <p id="stat-incomplete" style="color: #94a3b8;">0</p>
         </div>
       </div>
 
-      <div class="field-row">
-        <label>Latitude</label>
-        <div class="field-content">
-          <span id="resLat" class="field-value">-</span>
-          <button class="btn-copy" onclick="copyText('resLat')">Copy</button>
+      <!-- ── Ringkasan Geospasial ── -->
+      <div id="geo-summary" style="background: rgba(var(--card-bg-rgb), 0.5); padding: 12px; border-radius: 12px; border: 1px solid var(--border-color); margin-bottom: 16px; display: flex; flex-direction: column; gap: 8px;">
+        <h4 style="margin:0; font-size: 0.9rem; color: var(--text-main);">Ringkasan Geospasial</h4>
+        <div style="display: flex; gap: 16px; font-size: 0.85rem; color: var(--text-muted); flex-wrap: wrap;">
+          <div><strong style="color: var(--primary);">Bounding Box:</strong> <span id="geo-bbox">-</span></div>
+          <div><strong style="color: var(--primary);">Mean Coordinate:</strong> <span id="geo-mean">-</span></div>
+          <div><strong style="color: var(--primary);">Valid Points:</strong> <span id="geo-points">0</span></div>
         </div>
       </div>
 
-      <div class="field-row">
-        <label>Longitude</label>
-        <div class="field-content">
-          <span id="resLng" class="field-value">-</span>
-          <button class="btn-copy" onclick="copyText('resLng')">Copy</button>
-        </div>
+      <!-- ── Filter & Search Toolbar ── -->
+      <div class="filter-toolbar">
+        <input type="text" id="searchInput" placeholder="🔍 Cari nama, alamat, kecamatan..."
+          oninput="handleSearchInput(this.value)"
+          style="flex:1; min-width: 180px; padding: 8px 12px; height: 36px; font-size: 0.85rem;" />
+        <select id="filterStatus" onchange="handleFilterStatus(this.value)"
+          style="height: 36px; padding: 6px 10px; font-size: 0.85rem; min-width: 130px;">
+          <option value="ALL">Semua Status</option>
+          <option value="VALID">Valid</option>
+          <option value="DUPLIKAT">Duplikat</option>
+          <option value="GEOCODING_FAILED">Gagal Geocoding</option>
+          <option value="INVALID_URL">URL Invalid</option>
+          <option value="INVALID_COORDINATE">Koordinat Invalid</option>
+          <option value="EXTRACTION_FAILED">Ekstraksi Gagal</option>
+        </select>
+        <select id="filterKategori" onchange="handleFilterKategori(this.value)"
+          style="height: 36px; padding: 6px 10px; font-size: 0.85rem; min-width: 130px;">
+          <option value="ALL">Semua Kategori</option>
+          <option value="Masjid">Masjid</option>
+          <option value="Mushola">Mushola</option>
+          <option value="Sekolah">Sekolah</option>
+          <option value="Kantor">Kantor</option>
+          <option value="Fasilitas Umum">Fasilitas Umum</option>
+          <option value="Tempat Usaha">Tempat Usaha</option>
+          <option value="Lainnya">Lainnya</option>
+        </select>
       </div>
 
-      <div class="field-row">
-        <label>Pasted Link</label>
-        <div class="field-content">
-          <span id="resLink" class="field-value">-</span>
-          <button class="btn-copy" onclick="copyText('resLink')">Copy</button>
-        </div>
+      <!-- ── Tabel Data Saat Ini ── -->
+      <div class="excel-table-wrapper" id="current-table-wrapper">
+        <table class="excel-table" id="dataTable">
+          <thead>
+            <tr>
+              <th>No</th>
+              <th onclick="setSort('nama','asc'); refreshUI();" title="Sort Nama">Nama Tempat ↕</th>
+              <th>Kategori</th>
+              <th onclick="setSort('kecamatan','asc'); refreshUI();" title="Sort Kecamatan">Kecamatan ↕</th>
+              <th>Alamat Lengkap</th>
+              <th>Link Google Maps</th>
+              <th onclick="setSort('latitude','asc'); refreshUI();" title="Sort Latitude">Latitude ↕</th>
+              <th onclick="setSort('longitude','asc'); refreshUI();" title="Sort Longitude">Longitude ↕</th>
+              <th onclick="setSort('status','asc'); refreshUI();" title="Sort Status">Status ↕</th>
+              <th>Aksi</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody">
+            <!-- Diisi oleh renderTable() -->
+          </tbody>
+        </table>
       </div>
 
-      <button class="btn-copy-all" onclick="copyAllFormatted()">📋 COPY SEMUA FORMAT REKAP</button>
-    </div>
-    
-    <!-- Map Container -->
-    <div id="mapContainer" style="width: 100%; height: 250px; margin-top: 15px; border-radius: 12px; border: 1px solid var(--border-color); display: none; overflow: hidden; box-shadow: var(--glass-shadow);">
-      <div id="map" style="width: 100%; height: 100%;"></div>
-    </div>
-  </div> <!-- /container -->
-
-  <!-- RIGHT PANEL: Data Table -->
-  <div class="table-container">
-    <div class="table-header">
-      <div style="display: flex; gap: 20px; align-items: center;">
-        <h3 id="tab-current" onclick="switchTab('current')" style="cursor: pointer; margin: 0; font-size: 1.1rem; color: var(--primary); border-bottom: 2px solid var(--primary); padding-bottom: 4px; transition: all 0.3s ease;">Data Tabel</h3>
-        <h3 id="tab-archive" onclick="switchTab('archive')" style="cursor: pointer; margin: 0; font-size: 1.1rem; color: var(--text-muted); padding-bottom: 4px; transition: all 0.3s ease; border-bottom: 2px solid transparent;">Arsip Riwayat</h3>
+      <!-- ── Tabel Arsip Riwayat ── -->
+      <div class="excel-table-wrapper" id="archive-table-wrapper" style="display: none;">
+        <table class="excel-table" id="archiveTable">
+          <thead>
+            <tr>
+              <th>No</th>
+              <th onclick="setSort('tanggal','desc'); refreshUI();" title="Sort Tanggal">Tanggal ↕</th>
+              <th onclick="setSort('nama','asc'); refreshUI();" title="Sort Nama">Nama Tempat ↕</th>
+              <th>Kategori</th>
+              <th onclick="setSort('kecamatan','asc'); refreshUI();">Kecamatan ↕</th>
+              <th>Alamat Lengkap</th>
+              <th>Link Google Maps</th>
+              <th>Latitude</th>
+              <th>Longitude</th>
+              <th onclick="setSort('status','asc'); refreshUI();" title="Sort Status">Status ↕</th>
+              <th>Aksi</th>
+            </tr>
+          </thead>
+          <tbody id="archiveTableBody">
+            <!-- Diisi oleh renderArchiveTable() -->
+          </tbody>
+        </table>
       </div>
-      <div class="table-actions" id="current-actions" style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 10px;">
-        <button class="btn-process" onclick="exportToGeoJSON('current')" style="padding: 8px 15px; font-size: 0.85rem; width: auto; background-color: #3b82f6; color: white;">Export GeoJSON</button>
-        <button class="btn-process" onclick="exportToKML('current')" style="padding: 8px 15px; font-size: 0.85rem; width: auto; background-color: #8b5cf6; color: white;">Export KML</button>
-        
-        <input type="text" id="exportFileName" placeholder="Nama File (Wajib)" style="padding: 8px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-color); color: var(--text-main); font-size: 0.85rem; width: 140px; outline: none; height: 35px;">
-        <button class="btn-process" onclick="exportToExcel()" style="padding: 8px 15px; font-size: 0.85rem; width: auto; background-color: #10b981; color: white;">Export Excel</button>
-        <button class="btn-delete" onclick="clearTable()" style="padding: 8px 15px; background-color: transparent; border: 1px solid #ef4444;">Bersihkan</button>
-        
-        <div style="border-left: 1px solid var(--border-color); height: 35px; margin: 0 5px;"></div>
-        <input type="file" id="excelUpload" accept=".xlsx, .xls" style="display: none;" onchange="convertExcelToKML(event)">
-        <button class="btn-process" onclick="document.getElementById('excelUpload').click()" style="padding: 8px 15px; font-size: 0.85rem; width: auto; background-color: #f59e0b; color: white;">Excel To KML</button>
-      </div>
-      <div class="table-actions" id="archive-actions" style="display: none; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 10px;">
-        <button class="btn-process" onclick="exportToGeoJSON('archive')" style="padding: 8px 15px; font-size: 0.85rem; width: auto; background-color: #3b82f6; color: white;">Export GeoJSON Arsip</button>
-        <button class="btn-process" onclick="exportToKML('archive')" style="padding: 8px 15px; font-size: 0.85rem; width: auto; background-color: #8b5cf6; color: white;">Export KML Arsip</button>
-        <button class="btn-process" onclick="exportArchiveToExcel()" style="padding: 8px 15px; font-size: 0.85rem; width: auto; background-color: #10b981; color: white;">Export Excel Arsip</button>
-        <button class="btn-delete" onclick="clearArchive()" style="padding: 8px 15px; background-color: transparent; border: 1px solid #ef4444;">Hapus Arsip</button>
-      </div>
-    </div>
-    <div class="excel-table-wrapper" id="current-table-wrapper">
-      <table class="excel-table" id="dataTable">
-        <thead>
-          <tr>
-            <th>No</th>
-            <th>Nama Tempat</th>
-            <th>Alamat Lengkap</th>
-            <th>Link Google Maps</th>
-            <th>Latitude</th>
-            <th>Longitude</th>
-            <th>Aksi</th>
-          </tr>
-        </thead>
-        <tbody id="tableBody">
-          <!-- Data rows will go here -->
-        </tbody>
-      </table>
-    </div>
-    <div class="excel-table-wrapper" id="archive-table-wrapper" style="display: none;">
-      <table class="excel-table" id="archiveTable">
-        <thead>
-          <tr>
-            <th>No</th>
-            <th>Tanggal</th>
-            <th>Nama Tempat</th>
-            <th>Alamat Lengkap</th>
-            <th>Link Google Maps</th>
-            <th>Latitude</th>
-            <th>Longitude</th>
-            <th>Aksi</th>
-          </tr>
-        </thead>
-        <tbody id="archiveTableBody">
-          <!-- Archive rows will go here -->
-        </tbody>
-      </table>
-    </div>
-  </div> <!-- /table-container -->
-</div> <!-- /main-wrapper -->
 
-  <div id="toast" class="toast">Teks berhasil disalin!</div>
+    </div> <!-- /table-container -->
 
+  </div> <!-- /main-wrapper -->
 
+  <!-- Toast Notification -->
+  <div id="toast" class="toast" role="alert" aria-live="polite">Teks berhasil disalin!</div>
 
-  <!-- API Key Instructions Modal -->
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <!-- MODAL: API Key Instructions                               -->
+  <!-- ═══════════════════════════════════════════════════════════ -->
   <div id="apikey-modal"
     style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.75); z-index:9999; justify-content:center; align-items:center;">
     <div class="modal-content">
-      <div style="padding:15px 20px; border-bottom:1px solid var(--border-color); display:flex; justify-content:space-between; align-items:center; background-color: rgba(var(--card-bg-rgb), 0.3); transition: background-color 0.3s ease;">
+      <div
+        style="padding:15px 20px; border-bottom:1px solid var(--border-color); display:flex; justify-content:space-between; align-items:center; background-color: rgba(var(--card-bg-rgb), 0.3); transition: background-color 0.3s ease;">
         <h3 style="margin:0; font-size:1.1rem; color: var(--text-main);">🔑 Petunjuk Pemasangan API Key</h3>
         <button onclick="closeApiKeyModal()"
           style="background:none; border:none; color:var(--text-main); font-size:1.5rem; cursor:pointer; padding:0; line-height:1;">&times;</button>
       </div>
       <div style="padding: 20px; overflow-y: auto; color: var(--text-main); font-size: 0.95rem; line-height: 1.6;">
         <h4 style="color: var(--primary); margin-top: 0; margin-bottom: 15px;">Langkah-Langkah Mengambil API Key:</h4>
-
         <p style="margin-bottom: 15px;"><strong>1. Selesaikan Login / Sign In:</strong><br>
-          <span style="color: var(--text-muted);">Buka link di browser atau kunjungi langsung <a
-              href="https://account.distancematrix.ai/" target="_blank"
-              style="color: var(--primary);">https://account.distancematrix.ai/</a>.<br>
-            Jika diarahkan ke halaman login, masuk menggunakan akun Google atau GitHub yang Anda daftarkan.</span>
+          <span style="color: var(--text-muted);">Kunjungi <a href="https://account.distancematrix.ai/"
+              target="_blank" rel="noopener noreferrer"
+              style="color: var(--primary);">https://account.distancematrix.ai/</a>.</span>
         </p>
-
         <p style="margin-bottom: 15px;"><strong>2. Masuk ke Dashboard Utama:</strong><br>
-          <span style="color: var(--text-muted);">Setelah login berhasil, Anda akan diarahkan ke halaman utama Dashboard
-            / Overview.</span>
+          <span style="color: var(--text-muted);">Setelah login, Anda akan diarahkan ke halaman Dashboard /
+            Overview.</span>
         </p>
-
         <p style="margin-bottom: 15px;"><strong>3. Cari Bagian "API Tokens" atau "API Keys":</strong><br>
-          <span style="color: var(--text-muted);">Di halaman Dashboard (biasanya terletak di bagian tengah atau menu
-            navigasi sebelah kiri), cari bagian API Token / API Key.<br>
-            Secara otomatis, DistanceMatrix.ai biasanya langsung menyediakan Default Token saat akun pertama kali
-            dibuat.</span>
+          <span style="color: var(--text-muted);">Cari bagian API Token / API Key. DistanceMatrix.ai biasanya
+            langsung menyediakan Default Token saat akun pertama kali dibuat.</span>
         </p>
-
         <p style="margin-bottom: 15px;"><strong>4. Salin (Copy) API Key:</strong><br>
-          <span style="color: var(--text-muted);">Klik ikon Copy (salin) di sebelah string token/key tersebut.<br>
-            Jika token belum ada, klik tombol "Create Token" / "Generate New Key", berikan nama token (misalnya: My
-            Project), lalu simpan/salin kode API Key yang muncul.</span>
+          <span style="color: var(--text-muted);">Klik ikon Copy di sebelah token tersebut. Jika belum ada, klik
+            "Create Token", berikan nama, lalu salin kode yang muncul.</span>
         </p>
-
         <div
           style="background-color: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); padding: 12px; border-radius: 8px; margin-top: 20px;">
           <p style="margin: 0; color: #fca5a5; font-size: 0.9rem;"><strong>⚠️ Catatan Penting Security:</strong><br>
-            Link dengan parameter <code>code=</code> dan <code>state=</code> merupakan token akses login sekali pakai
-            (one-time authentication code). Jangan bagikan link lengkap yang berisi code tersebut kepada orang lain
-            untuk menjaga keamanan akun Anda.</p>
+            Link dengan parameter <code>code=</code> dan <code>state=</code> merupakan token akses login sekali
+            pakai. Jangan bagikan link tersebut kepada orang lain.</p>
         </div>
       </div>
     </div>
   </div>
 
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <!-- JAVASCRIPT MODULES                                         -->
+  <!-- Urutan load penting: validation → extractor → geocoding → -->
+  <!-- duplicate → storage → map → export → ui → app             -->
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <script src="js/validation.js"></script>
+  <script src="js/extractor.js"></script>
+  <script src="js/geocoding.js"></script>
+  <script src="js/duplicate.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/map.js"></script>
+  <script src="js/export.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/app.js"></script>
 
-
-  <script>
-    // Fungsi Toggle Tema
-    function toggleTheme() {
-      const currentTheme = document.documentElement.getAttribute('data-theme');
-      const newTheme = currentTheme === 'light' ? 'dark' : 'light';
-
-      document.documentElement.setAttribute('data-theme', newTheme);
-      localStorage.setItem('app-theme', newTheme);
-      updateThemeIcon(newTheme);
-
-      // Sinkronisasi dengan iframe jika ada
-      const iframe = document.getElementById('settings-iframe');
-      if (iframe && iframe.contentWindow) {
-        iframe.contentWindow.postMessage({ theme: newTheme }, '*');
-      }
-    }
-
-    function updateThemeIcon(theme) {
-      const btn = document.getElementById('theme-toggle');
-      if (btn) {
-        btn.innerHTML = theme === 'light' ? '🌞' : '🌙';
-      }
-    }
-
-    // Memuat API Key yang tersimpan saat halaman dibuka
-    document.addEventListener('DOMContentLoaded', () => {
-      const savedTheme = localStorage.getItem('app-theme') || 'dark';
-      updateThemeIcon(savedTheme);
-
-      const savedKey = localStorage.getItem('gmaps_api_key');
-      if (savedKey) {
-        document.getElementById('apiKey').value = savedKey;
-      }
-
-      const savedTableData = localStorage.getItem('gmaps_table_data');
-      if (savedTableData) {
-        try {
-          tableData = JSON.parse(savedTableData);
-          if (tableData && tableData.length > 0) {
-            renderTable();
-          }
-        } catch (e) {
-          console.error('Failed to load table data:', e);
-        }
-      }
-
-      const savedArchiveData = localStorage.getItem('gmaps_archive_data');
-      if (savedArchiveData) {
-        try {
-          archiveData = JSON.parse(savedArchiveData);
-          if (archiveData && archiveData.length > 0) {
-            renderArchiveTable();
-          }
-        } catch (e) {
-          console.error('Failed to load archive data:', e);
-        }
-      }
-
-      // Dukungan tombol Enter dan auto-save untuk input API Key
-      document.getElementById('apiKey').addEventListener('input', function(e) {
-        localStorage.setItem('gmaps_api_key', this.value.trim());
-      });
-      
-      document.getElementById('apiKey').addEventListener('keydown', function (e) {
-        if (e.key === 'Enter') {
-          e.preventDefault();
-          parseGmapsLink();
-        }
-      });
-
-
-
-
-    });
-
-    function openApiKeyModal() {
-      document.getElementById('apikey-modal').style.display = 'flex';
-      document.body.style.overflow = 'hidden';
-    }
-
-    function closeApiKeyModal() {
-      document.getElementById('apikey-modal').style.display = 'none';
-      document.body.style.overflow = 'auto';
-    }
-
-    async function pasteFromClipboard() {
-      try {
-        const text = await navigator.clipboard.readText();
-        if (text) {
-          document.getElementById('gmapsUrl').value = text;
-          showToast('Link di-paste dari clipboard! Memproses...');
-          // Langsung otomatis diproses setelah dipaste
-          parseGmapsLink();
-        }
-      } catch (err) {
-        showToast('Gagal mem-paste. Pastikan browser mengizinkan akses clipboard.', 'error');
-      }
-    }
-
-    async function pasteApiKey() {
-      try {
-        const text = await navigator.clipboard.readText();
-        if (text) {
-          document.getElementById('apiKey').value = text;
-          localStorage.setItem('gmaps_api_key', text.trim());
-          showToast('API Key berhasil di-paste dan disimpan!');
-        }
-      } catch (err) {
-        showToast('Gagal mem-paste. Pastikan browser mengizinkan akses clipboard.', 'error');
-      }
-    }
-
-    function resetForm() {
-      document.getElementById('gmapsUrl').value = '';
-      document.getElementById('resultsCard').style.display = 'none';
-      document.getElementById('resName').textContent = '-';
-      document.getElementById('resAddress').textContent = '-';
-      document.getElementById('resLat').textContent = '-';
-      document.getElementById('resLng').textContent = '-';
-      document.getElementById('resLink').textContent = '-';
-      showToast('Kolom berhasil dibersihkan.');
-    }
-
-    function resetApiKey() {
-      document.getElementById('apiKey').value = '';
-      localStorage.removeItem('gmaps_api_key');
-      showToast('API Key dihapus! Silakan masukkan key baru dari dashboard Anda.');
-      document.getElementById('apiKey').focus();
-    }
-
-    
-    let leafMap = null;
-    let leafMarkers = null;
-
-    function initMap() {
-      if (!leafMap) {
-        document.getElementById('mapContainer').style.display = 'block';
-        leafMap = L.map('map').setView([-2.5489, 118.0149], 5);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            maxZoom: 19,
-            attribution: '© OpenStreetMap'
-        }).addTo(leafMap);
-        leafMarkers = L.featureGroup().addTo(leafMap);
-      }
-    }
-
-    function addMarker(lat, lng, title) {
-      initMap();
-      const popupContent = `
-        <div style="font-family: Outfit, sans-serif; font-size: 13px; color: #333;">
-          <strong style="font-size: 15px; color: #000;">${title}</strong><br/>
-          <b>Lat/Lng:</b> ${lat}, ${lng}
-        </div>
-      `;
-      const marker = L.marker([lat, lng]).bindPopup(popupContent);
-      leafMarkers.addLayer(marker);
-      leafMap.fitBounds(leafMarkers.getBounds(), {padding: [30, 30], maxZoom: 16});
-    }
-
-    async function parseGmapsLink() {
-      const inputText = document.getElementById('gmapsUrl').value.trim();
-      const apiKey = document.getElementById('apiKey').value.trim();
-      const resultsCard = document.getElementById('resultsCard');
-      const loader = document.getElementById('loader');
-
-      if (!inputText) {
-        showToast('Masukkan setidaknya satu URL Google Maps!');
-        return;
-      }
-      if (!apiKey) {
-        showToast('Harap masukkan API Key terlebih dahulu!');
-        return;
-      }
-
-      localStorage.setItem('gmaps_api_key', apiKey);
-      
-      const urls = inputText.split(/\r?\n/).map(u => u.trim()).filter(u => u.length > 0);
-      if(urls.length === 0) { loader.style.display='none'; return; }
-      
-      if(urls.length > 10) {
-        showToast('Maksimal hanya 10 link yang dapat diproses sekaligus!', 'error');
-        return;
-      }
-
-      loader.style.display = 'block';
-      let processedCount = 0;
-      let newRowsAdded = false;
-      
-      // Reset map layers for new batch
-      if(leafMap && leafMarkers) {
-        leafMarkers.clearLayers();
-      }
-      
-      for (const inputUrl of urls) {
-        if (inputUrl.includes('maps.app.goo.gl')) {
-          showToast('Ditemukan shortlink (maps.app.goo.gl). Harap gunakan Link Panjang!', 'error');
-          continue;
-        }
-
-        if (urls.length > 1) {
-            loader.innerHTML = `<div class="loader-spinner"></div>Memproses ${processedCount + 1} dari ${urls.length} link...`;
-        } else {
-            loader.innerHTML = `<div class="loader-spinner"></div>Membaca koordinat & menghubungi Google API...`;
-        }
-
-        try {
-          let lat = 'Tidak ditemukan';
-          let lng = 'Tidak ditemukan';
-          let name = 'Tidak ditemukan';
-          let address = 'Mencari alamat...';
-          let apiHit = false;
-
-          const latMatch = inputUrl.match(/!3d(-?\d+\.\d+)/);
-          const lngMatch = inputUrl.match(/!4d(-?\d+\.\d+)/);
-          if (latMatch && lngMatch) {
-            lat = latMatch[1];
-            lng = lngMatch[1];
-          } else {
-            const viewportMatch = inputUrl.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
-            if (viewportMatch) {
-              lat = viewportMatch[1];
-              lng = viewportMatch[2];
-            }
-          }
-
-          const nameMatch = inputUrl.match(/\/place\/([^\/]+)\//);
-          if (nameMatch) {
-            name = decodeURIComponent(nameMatch[1].replace(/\+/g, ' '));
-          }
-
-          if (lat === 'Tidak ditemukan' && name === 'Tidak ditemukan') {
-            throw new Error('Format link tidak dikenali.');
-          }
-
-          if (lat !== 'Tidak ditemukan' && lng !== 'Tidak ditemukan') {
-            const cacheKey = `addr_exact_${lat}_${lng}`;
-            const cachedAddress = localStorage.getItem(cacheKey);
-
-            if (cachedAddress) {
-              address = cachedAddress;
-            } else {
-              apiHit = true;
-              try {
-                let geocodeUrl = apiKey.startsWith('AIza') 
-                  ? `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${apiKey}`
-                  : `https://api.distancematrix.ai/maps/api/geocode/json?latlng=${lat},${lng}&key=${apiKey}`;
-
-                const geoResponse = await fetch(geocodeUrl);
-                const geoData = await geoResponse.json();
-                const resultsArr = geoData.results || geoData.result;
-
-                if (geoData.status === 'OK') {
-                  if (resultsArr && resultsArr.length > 0) {
-                    address = resultsArr[0].formatted_address;
-                  } else if (geoData.formatted_address) {
-                    address = geoData.formatted_address;
-                  } else {
-                    address = 'Alamat tidak ditemukan.';
-                  }
-                  localStorage.setItem(cacheKey, address);
-                } else if (geoData.status === 'REQUEST_DENIED') {
-                  address = 'Error: API Key tidak valid / limit.';
-                } else if (geoData.status === 'ZERO_RESULTS') {
-                  address = 'Alamat tidak ditemukan.';
-                } else {
-                  address = `Error: ${geoData.status}`;
-                }
-              } catch (geoErr) {
-                address = 'Gagal memuat alamat.';
-              }
-            }
-            
-            addMarker(parseFloat(lat), parseFloat(lng), name !== 'Tidak ditemukan' ? name : address);
-          } else {
-            address = 'Koordinat tidak ditemukan.';
-          }
-
-          let cleanLink = inputUrl;
-          const cidMatch = inputUrl.match(/1s0x[0-9a-fA-F]+:0x([0-9a-fA-F]+)/);
-          if (cidMatch && cidMatch[1]) {
-            try {
-              const cidDecimal = BigInt('0x' + cidMatch[1]).toString();
-              cleanLink = `https://maps.google.com/?cid=${cidDecimal}&g_mp=Cidnb29nbGUubWFwcy5wbGFjZXMudjEuUGxhY2VzLlNlYXJjaFRleHQQAhgEIAA`;
-            } catch (e) {}
-          }
-
-          // UI Update for the last processed
-          document.getElementById('resName').textContent = name;
-          document.getElementById('resAddress').textContent = address;
-          document.getElementById('resLat').textContent = lat;
-          document.getElementById('resLng').textContent = lng;
-          document.getElementById('resLink').textContent = cleanLink;
-          resultsCard.style.display = 'block';
-
-          const isDuplicate = archiveData.some(item => item.link === cleanLink) || tableData.some(item => item.link === cleanLink);
-          if (isDuplicate) {
-            showToast(`Link untuk ${name !== 'Tidak ditemukan' ? name : 'lokasi ini'} sudah ada, dilewati.`, 'error');
-            continue;
-          }
-
-          // Auto add to table
-          tableData.push({ name, address, link: cleanLink, lat, lng });
-          archiveData.push({ date: new Date().toLocaleString('id-ID'), name, address, link: cleanLink, lat, lng });
-          saveArchiveData();
-          newRowsAdded = true;
-          processedCount++;
-
-          renderTable();
-          const wrapper = document.querySelector('.excel-table-wrapper');
-          if(wrapper) wrapper.scrollTop = wrapper.scrollHeight;
-
-          if(urls.length > 1 && processedCount < urls.length && apiHit) {
-              await new Promise(r => setTimeout(r, 600)); // Delay 600ms
-          }
-        } catch (err) {
-           console.error(err);
-        }
-      } // end for loop
-
-      if(newRowsAdded) {
-         renderTable();
-         const wrapper = document.querySelector('.excel-table-wrapper');
-         setTimeout(() => wrapper.scrollTop = wrapper.scrollHeight, 100);
-      }
-
-      loader.innerHTML = `<div class="loader-spinner"></div>Membaca koordinat & menghubungi Google API...`;
-      loader.style.display = 'none';
-      
-      if(processedCount > 0) {
-        showToast(`Berhasil memproses ${processedCount} link!`);
-      }
-    }
-    
-    // Legacy function, replaced above
-    function _old_parse() {}
-
-    function copyText(elementId) {
-      const text = document.getElementById(elementId).textContent;
-      if (text && text !== '-') {
-        navigator.clipboard.writeText(text);
-        showToast('Berhasil disalin ke clipboard!');
-      }
-    }
-
-
-
-    let tableData = [];
-    let archiveData = [];
-
-    function switchTab(tab) {
-      const tabCurrent = document.getElementById('tab-current');
-      const tabArchive = document.getElementById('tab-archive');
-      const currentWrapper = document.getElementById('current-table-wrapper');
-      const archiveWrapper = document.getElementById('archive-table-wrapper');
-      const currentActions = document.getElementById('current-actions');
-      const archiveActions = document.getElementById('archive-actions');
-
-      if (tab === 'archive') {
-        tabArchive.style.color = 'var(--primary)';
-        tabArchive.style.borderBottom = '2px solid var(--primary)';
-        tabCurrent.style.color = 'var(--text-muted)';
-        tabCurrent.style.borderBottom = '2px solid transparent';
-        
-        currentWrapper.style.display = 'none';
-        currentActions.style.display = 'none';
-        archiveWrapper.style.display = 'block';
-        archiveActions.style.display = 'flex';
-        renderArchiveTable();
-      } else {
-        tabCurrent.style.color = 'var(--primary)';
-        tabCurrent.style.borderBottom = '2px solid var(--primary)';
-        tabArchive.style.color = 'var(--text-muted)';
-        tabArchive.style.borderBottom = '2px solid transparent';
-        
-        archiveWrapper.style.display = 'none';
-        archiveActions.style.display = 'none';
-        currentWrapper.style.display = 'block';
-        currentActions.style.display = 'flex';
-      }
-    }
-
-    function renderArchiveTable() {
-      const tbody = document.getElementById('archiveTableBody');
-      if (!tbody) return;
-      tbody.innerHTML = '';
-      
-      archiveData.forEach((row, index) => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td>${index + 1}</td>
-          <td>${row.date || '-'}</td>
-          <td>${row.name}</td>
-          <td>${row.kategori || '-'}</td>
-          <td>${row.kecamatan || '-'}</td>
-          <td>${row.address}</td>
-          <td><a href="${row.link}" target="_blank" style="color: var(--primary);">Buka Link</a></td>
-          <td>${row.lat}</td>
-          <td>${row.lng}</td>
-          <td>
-            <button class="btn-delete" onclick="deleteArchiveRow(${index})" style="padding: 4px 8px; font-size: 0.75rem;">Hapus</button>
-          </td>
-        `;
-        tbody.appendChild(tr);
-      });
-    }
-
-    function deleteArchiveRow(index) {
-      if (confirm('Hapus baris arsip ini?')) {
-        archiveData.splice(index, 1);
-        saveArchiveData();
-        renderArchiveTable();
-      }
-    }
-
-    function clearArchive() {
-      if (archiveData.length === 0) return;
-      if (confirm('Yakin ingin membersihkan seluruh arsip riwayat?')) {
-        archiveData = [];
-        saveArchiveData();
-        renderArchiveTable();
-        showToast('Arsip berhasil dibersihkan.');
-      }
-    }
-
-    function exportArchiveToExcel() {
-      if (archiveData.length === 0) {
-        showToast('Arsip masih kosong!', 'error');
-        return;
-      }
-      
-      try {
-        const wsData = [
-          ['No', 'Tanggal', 'Nama Tempat', 'Kategori', 'Kecamatan', 'Alamat Lengkap', 'Link Google Maps', 'Latitude', 'Longitude']
-        ];
-        
-        archiveData.forEach((row, idx) => {
-          wsData.push([
-            idx + 1,
-            row.date || '-',
-            row.name,
-            row.kategori || '-',
-            row.kecamatan || '-',
-            row.address,
-            row.link,
-            row.lat,
-            row.lng
-          ]);
-        });
-        
-        const wb = XLSX.utils.book_new();
-        const ws = XLSX.utils.aoa_to_sheet(wsData);
-        
-        for (let R = 1; R <= archiveData.length; ++R) {
-          const cell_ref = XLSX.utils.encode_cell({c: 6, r: R});
-          if (ws[cell_ref] && ws[cell_ref].v) {
-            ws[cell_ref].l = { Target: ws[cell_ref].v };
-          }
-        }
-        
-        const wscols = [
-          {wch: 5}, {wch: 20}, {wch: 30}, {wch: 20}, {wch: 20}, {wch: 50}, {wch: 40}, {wch: 15}, {wch: 15}
-        ];
-        ws['!cols'] = wscols;
-        
-        XLSX.utils.book_append_sheet(wb, ws, "Data Arsip");
-        const filename = `Arsip_Maps_${new Date().toISOString().slice(0,10)}.xlsx`;
-        XLSX.writeFile(wb, filename);
-        showToast('Berhasil export Arsip ke Excel!');
-      } catch(err) {
-        console.error(err);
-        showToast('Gagal export Arsip.', 'error');
-      }
-    }
-
-    function saveArchiveData() {
-      localStorage.setItem('gmaps_archive_data', JSON.stringify(archiveData));
-    }
-
-    function saveTableData() {
-      localStorage.setItem('gmaps_table_data', JSON.stringify(tableData));
-    }
-    
-    function normalizeString(str) {
-      if (!str) return '';
-      return str.toLowerCase().replace(/[^a-z0-9]/g, '');
-    }
-
-    function calculateHaversineDistance(lat1, lon1, lat2, lon2) {
-      const R = 6371e3; // metres
-      const p1 = lat1 * Math.PI/180;
-      const p2 = lat2 * Math.PI/180;
-      const dp = (lat2-lat1) * Math.PI/180;
-      const dl = (lon2-lon1) * Math.PI/180;
-
-      const a = Math.sin(dp/2) * Math.sin(dp/2) +
-                Math.cos(p1) * Math.cos(p2) *
-                Math.sin(dl/2) * Math.sin(dl/2);
-      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-      return R * c;
-    }
-
-    function addToTable() {
-      const name = document.getElementById('resName').textContent;
-      const address = document.getElementById('resAddress').textContent;
-      const latText = document.getElementById('resLat').textContent;
-      const lngText = document.getElementById('resLng').textContent;
-      const lat = parseFloat(latText);
-      const lng = parseFloat(lngText);
-      const link = document.getElementById('resLink').textContent;
-      
-      if (name === '-' || name === 'Tidak ditemukan') {
-        showToast('Belum ada data lokasi yang valid diproses!', 'error');
-        return;
-      }
-
-      const isDuplicateLink = archiveData.some(item => item.link === link) || tableData.some(item => item.link === link);
-      if (isDuplicateLink) {
-        showToast('Data ini sudah ada di arsip/tabel (Link Ganda)!', 'error');
-        return;
-      }
-      
-      const normName = normalizeString(name);
-      let duplicateReason = null;
-      
-      const checkDuplicate = (item) => {
-        if (normalizeString(item.name) === normName) {
-           duplicateReason = `Nama tempat sangat mirip dengan: ${item.name}`;
-           return true;
-        }
-        if (!isNaN(lat) && !isNaN(lng) && !isNaN(parseFloat(item.lat)) && !isNaN(parseFloat(item.lng))) {
-           const dist = calculateHaversineDistance(lat, lng, parseFloat(item.lat), parseFloat(item.lng));
-           if (dist < 10) {
-              duplicateReason = `Jarak terlalu dekat (<10m) dengan: ${item.name}`;
-              return true;
-           }
-        }
-        return false;
-      };
-
-      if (tableData.some(checkDuplicate) || archiveData.some(checkDuplicate)) {
-         showToast(`Gagal menambahkan! Deteksi duplikasi: ${duplicateReason}`, 'error');
-         return;
-      }
-
-      const row = {
-        name, address, link, lat: latText, lng: lngText
-      };
-      
-      tableData.push(row);
-      archiveData.push({ date: new Date().toLocaleString('id-ID'), ...row });
-      saveArchiveData();
-      saveTableData();
-      renderTable();
-      showToast('Data berhasil ditambahkan ke tabel!');
-      
-      const wrapper = document.querySelector('.excel-table-wrapper');
-      setTimeout(() => {
-        wrapper.scrollTop = wrapper.scrollHeight;
-      }, 100);
-    }
-    
-    function renderTable() {
-      const tbody = document.getElementById('tableBody');
-      tbody.innerHTML = '';
-      
-      tableData.forEach((row, index) => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td>${index + 1}</td>
-          <td>${row.name}</td>
-          <td>${row.address}</td>
-          <td><a href="${row.link}" target="_blank" style="color: var(--primary);">Buka Link</a></td>
-          <td>${row.lat}</td>
-          <td>${row.lng}</td>
-          <td>
-            <button class="btn-delete" onclick="deleteRow(${index})" style="padding: 4px 8px; font-size: 0.75rem;">Hapus</button>
-          </td>
-        `;
-        tbody.appendChild(tr);
-      });
-    }
-    
-    function deleteRow(index) {
-      if (confirm('Hapus baris ini?')) {
-        tableData.splice(index, 1);
-        saveTableData();
-        renderTable();
-      }
-    }
-    
-    function clearTable() {
-      if (tableData.length === 0) return;
-      if (confirm('Yakin ingin membersihkan seluruh isi tabel?')) {
-        tableData = [];
-        saveTableData();
-        renderTable();
-        showToast('Tabel berhasil dibersihkan.');
-      }
-    }
-    
-    function exportToExcel() {
-      if (tableData.length === 0) {
-        showToast('Tabel masih kosong!', 'error');
-        return;
-      }
-      
-      const customNameInput = document.getElementById('exportFileName');
-      const customName = customNameInput ? customNameInput.value.trim() : '';
-      
-      if (!customName) {
-        showToast('Harap isi Nama File terlebih dahulu!', 'error');
-        if (customNameInput) customNameInput.focus();
-        return;
-      }
-      
-      try {
-        const wsData = [
-          ['No', 'Nama Tempat', 'Kategori', 'Kecamatan', 'Alamat Lengkap', 'Link Google Maps', 'Latitude', 'Longitude']
-        ];
-        
-        tableData.forEach((row, idx) => {
-          wsData.push([
-            idx + 1,
-            row.name,
-            row.kategori || '-',
-            row.kecamatan || '-',
-            row.address,
-            row.link,
-            row.lat,
-            row.lng
-          ]);
-        });
-        
-        const wb = XLSX.utils.book_new();
-        const ws = XLSX.utils.aoa_to_sheet(wsData);
-        
-        // Add hyperlink properties for Google Maps Link (Column F, index 5)
-        for (let R = 1; R <= tableData.length; ++R) {
-          const cell_ref = XLSX.utils.encode_cell({c: 5, r: R});
-          if (ws[cell_ref] && ws[cell_ref].v) {
-            ws[cell_ref].l = { Target: ws[cell_ref].v };
-          }
-        }
-        
-        // Auto-size columns slightly
-        const wscols = [
-          {wch: 5}, {wch: 30}, {wch: 20}, {wch: 20}, {wch: 50}, {wch: 40}, {wch: 15}, {wch: 15}
-        ];
-        ws['!cols'] = wscols;
-        
-        XLSX.utils.book_append_sheet(wb, ws, "Data Maps");
-        
-        // Generate filename
-        const filename = `${customName}.xlsx`;
-        
-        XLSX.writeFile(wb, filename);
-        showToast('Berhasil export ke Excel!');
-      } catch(err) {
-        console.error(err);
-        showToast('Gagal export ke Excel.', 'error');
-      }
-    }
-
-    function exportToGeoJSON(target) {
-      const dataToExport = target === 'archive' ? archiveData : tableData;
-      if (dataToExport.length === 0) {
-        showToast('Data masih kosong!', 'error');
-        return;
-      }
-
-      const features = dataToExport.map(row => ({
-        "type": "Feature",
-        "geometry": {
-          "type": "Point",
-          "coordinates": [parseFloat(row.lng), parseFloat(row.lat)]
-        },
-        "properties": {
-          "Name": row.name,
-          "Address": row.address,
-          "Link": row.link
-        }
-      }));
-
-      const geojson = {
-        "type": "FeatureCollection",
-        "features": features
-      };
-
-      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(geojson, null, 2));
-      const downloadAnchorNode = document.createElement('a');
-      downloadAnchorNode.setAttribute("href", dataStr);
-      downloadAnchorNode.setAttribute("download", `Data_Maps_${target}_${new Date().toISOString().slice(0,10)}.geojson`);
-      document.body.appendChild(downloadAnchorNode);
-      downloadAnchorNode.click();
-      downloadAnchorNode.remove();
-      showToast('Berhasil export ke GeoJSON!');
-    }
-
-    function exportToKML(target) {
-      const dataToExport = target === 'archive' ? archiveData : tableData;
-      if (dataToExport.length === 0) {
-        showToast('Data masih kosong!', 'error');
-        return;
-      }
-
-      let kml = `<?xml version="1.0" encoding="UTF-8"?>\n<kml xmlns="http://www.opengis.net/kml/2.2">\n  <Document>\n    <name>Data Maps ${target}</name>\n`;
-
-      dataToExport.forEach(row => {
-        kml += `    <Placemark>\n`;
-        kml += `      <name>${row.name.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</name>\n`;
-        kml += `      <description><![CDATA[\n`;
-        kml += `        <b>Alamat:</b> ${row.address}<br/>\n`;
-        kml += `        <b>Link:</b> <a href="${row.link}">${row.link}</a>\n`;
-        kml += `      ]]></description>\n`;
-        kml += `      <Point>\n`;
-        kml += `        <coordinates>${row.lng},${row.lat},0</coordinates>\n`;
-        kml += `      </Point>\n`;
-        kml += `    </Placemark>\n`;
-      });
-
-      kml += `  </Document>\n</kml>`;
-
-      const dataStr = "data:application/vnd.google-earth.kml+xml;charset=utf-8," + encodeURIComponent(kml);
-      const downloadAnchorNode = document.createElement('a');
-      downloadAnchorNode.setAttribute("href", dataStr);
-      downloadAnchorNode.setAttribute("download", `Data_Maps_${target}_${new Date().toISOString().slice(0,10)}.kml`);
-      document.body.appendChild(downloadAnchorNode);
-      downloadAnchorNode.click();
-      downloadAnchorNode.remove();
-      showToast('Berhasil export ke KML!');
-    }
-
-    function convertExcelToKML(event) {
-      const file = event.target.files[0];
-      if (!file) return;
-
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        try {
-          const data = new Uint8Array(e.target.result);
-          const workbook = XLSX.read(data, {type: 'array'});
-          
-          let kml = `<?xml version="1.0" encoding="UTF-8"?>\n<kml xmlns="http://www.opengis.net/kml/2.2">\n  <Document>\n    <name>Excel_To_KML_${file.name}</name>\n`;
-          let validSheetsCount = 0;
-
-          for (let sheetIndex = 0; sheetIndex < workbook.SheetNames.length; sheetIndex++) {
-            const sheetName = workbook.SheetNames[sheetIndex];
-            const worksheet = workbook.Sheets[sheetName];
-            const rows = XLSX.utils.sheet_to_json(worksheet, {header: 1});
-            
-            if (rows.length < 2) continue; // Skip empty sheets
-
-            const headerRow = rows[0].map(h => typeof h === 'string' ? h.toLowerCase().trim() : '');
-            
-            let nameIdx = headerRow.findIndex(h => h.includes('nama tempat') || h.includes('business name') || h === 'name');
-            let addressIdx = headerRow.findIndex(h => h.includes('alamat') || h.includes('address'));
-            let linkIdx = headerRow.findIndex(h => h.includes('link') || h.includes('google maps u'));
-            let latIdx = headerRow.findIndex(h => h.includes('latitude') || h.includes('lat'));
-            let lngIdx = headerRow.findIndex(h => h.includes('longitude') || h.includes('lng') || h.includes('lon'));
-
-            if (nameIdx === -1 || latIdx === -1 || lngIdx === -1) {
-              continue; // Skip sheets without required columns
-            }
-
-            validSheetsCount++;
-            kml += `    <Folder>\n`;
-            kml += `      <name>${sheetName.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</name>\n`;
-
-            for (let i = 1; i < rows.length; i++) {
-              const row = rows[i];
-              if (!row || row.length === 0) continue;
-              
-              let name = row[nameIdx] || 'Unknown';
-              let address = addressIdx !== -1 ? (row[addressIdx] || '-') : '-';
-              let link = linkIdx !== -1 ? (row[linkIdx] || '-') : '-';
-              let latStr = row[latIdx];
-              let lngStr = row[lngIdx];
-
-              if (latStr === undefined || lngStr === undefined) continue;
-
-              let lat = parseFloat(String(latStr).replace(',', '.'));
-              let lng = parseFloat(String(lngStr).replace(',', '.'));
-
-              if (isNaN(lat) || isNaN(lng)) continue;
-
-              name = String(name).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-              
-              kml += `      <Placemark>\n`;
-              kml += `        <name>${name}</name>\n`;
-              kml += `        <description><![CDATA[\n`;
-              kml += `          <b>Alamat:</b> ${address}<br/>\n`;
-              kml += `          <b>Link:</b> <a href="${link}">${link}</a>\n`;
-              kml += `        ]]></description>\n`;
-              kml += `        <Point>\n`;
-              kml += `          <coordinates>${lng},${lat},0</coordinates>\n`;
-              kml += `        </Point>\n`;
-              kml += `      </Placemark>\n`;
-            }
-            kml += `    </Folder>\n`;
-          }
-
-          if (validSheetsCount === 0) {
-            showToast('Format header Excel tidak dikenali! Pastikan ada kolom Nama, Latitude, dan Longitude.', 'error');
-            event.target.value = '';
-            return;
-          }
-
-          kml += `  </Document>\n</kml>`;
-
-          const dataStr = "data:application/vnd.google-earth.kml+xml;charset=utf-8," + encodeURIComponent(kml);
-          const downloadAnchorNode = document.createElement('a');
-          downloadAnchorNode.setAttribute("href", dataStr);
-          let outName = file.name.replace(/\.[^/.]+$/, "") + ".kml";
-          downloadAnchorNode.setAttribute("download", outName);
-          document.body.appendChild(downloadAnchorNode);
-          downloadAnchorNode.click();
-          downloadAnchorNode.remove();
-          
-          showToast('Berhasil convert Excel ke KML!');
-        } catch (err) {
-          console.error(err);
-          showToast('Gagal memproses file Excel.', 'error');
-        }
-        event.target.value = '';
-      };
-      reader.readAsArrayBuffer(file);
-    }
-
-    function copyAllFormatted() {
-      const name = document.getElementById('resName').textContent;
-      const address = document.getElementById('resAddress').textContent;
-      const lat = document.getElementById('resLat').textContent;
-      const lng = document.getElementById('resLng').textContent;
-      const link = document.getElementById('resLink').textContent;
-
-      const formatted = `Nama Lokasi : ${name}\nAlamat      : ${address}\nLatitude    : ${lat}\nLongitude   : ${lng}\nLink Gmaps  : ${link}`;
-
-      navigator.clipboard.writeText(formatted);
-      showToast('Seluruh rekap data berhasil disalin!');
-    }
-
-    function showToast(message, type = 'success') {
-      const toast = document.getElementById('toast');
-      toast.innerHTML = type === 'error' ? '⚠️ ' + message : '✅ ' + message;
-
-      if (type === 'error') {
-        toast.classList.add('error');
-      } else {
-        toast.classList.remove('error');
-      }
-
-      toast.style.display = 'flex';
-      // Force reflow
-      void toast.offsetWidth;
-      toast.classList.add('show');
-      
-      setTimeout(() => {
-        toast.classList.remove('show');
-        setTimeout(() => {
-          if (!toast.classList.contains('show')) {
-            toast.style.display = 'none';
-          }
-        }, 400); // Wait for transition
-      }, 3500);
-    }
-
-    // Mendukung fitur tombol Enter cerdas (Smart Enter)
-    document.addEventListener('keydown', function (event) {
-      if (event.key === 'Enter') {
-        const apiModal = document.getElementById('apikey-modal');
-
-        if (apiModal && apiModal.style.display === 'flex') {
-          return;
-        }
-
-        const gmapsInput = document.getElementById('gmapsUrl');
-        const sendBtn = document.getElementById('btn-confirm-send');
-        const resultsCard = document.getElementById('resultsCard');
-        const isResultsReady = sendBtn && !sendBtn.disabled && resultsCard && resultsCard.style.display === 'block';
-
-        if (document.activeElement === gmapsInput) {
-          // Do nothing, let the textarea insert a newline natively
-          return;
-        }
-
-        // Jika user menekan Enter bukan di input URL, dan hasilnya siap dikirim
-        if (isResultsReady) {
-          const tag = document.activeElement ? document.activeElement.tagName : '';
-          const isFocusingOtherInput = (tag === 'INPUT' || tag === 'TEXTAREA') && document.activeElement.id !== 'apiKey';
-
-          if (!isFocusingOtherInput) {
-            event.preventDefault();
-            addToTable();
-          }
-        }
-      }
-    });
-  </script>
 </body>
 
 </html>
