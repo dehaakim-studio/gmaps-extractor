@@ -360,11 +360,11 @@ function switchTab(tab) {
 // ─────────────────────────────────────────────
 
 function handleExportExcel() {
-  const filenameEl = document.getElementById('exportFileName');
-  const filename = filenameEl ? filenameEl.value.trim() : '';
-  const result = exportToExcel(tableData, filename);
+  const defaultName = `Data_Maps_Export_${new Date().toISOString().slice(0, 10)}`;
+  const filename = prompt('Masukkan nama file Excel:', defaultName);
+  if (!filename || filename.trim() === '') return; // Batal atau kosong
+  const result = exportToExcel(tableData, filename.trim());
   showToast(result.message, result.success ? 'success' : 'error');
-  if (!result.success && filenameEl) filenameEl.focus();
 }
 
 function handleExportGeoJSON(target) {
