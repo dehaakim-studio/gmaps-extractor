@@ -127,26 +127,13 @@ function extractCoordinates(url) {
 
 /**
  * Membuat "clean link" dari URL Google Maps.
- * Jika URL mengandung CID (Place ID hex), link dikonversi ke format CID desimal
- * menggunakan https://maps.google.com/?cid=DECIMAL — tanpa parameter tambahan
- * agar setiap link mengarah ke tempat yang benar.
- * Jika tidak ada CID, kembalikan URL asli.
+ * (Fitur konversi CID dinonaktifkan sementara karena Google Maps sering menyertakan CID dari pencarian sebelumnya, yang memicu duplikat link palsu).
  * @param {string} url
  * @returns {string}
  */
 function buildCleanLink(url) {
   if (!url) return url;
-  // Format CID dari URL panjang: ...1s0xHEX:0xHEX...
-  const cidMatch = url.match(/1s0x[0-9a-fA-F]+:0x([0-9a-fA-F]+)/);
-  if (cidMatch && cidMatch[1]) {
-    try {
-      const cidDecimal = BigInt('0x' + cidMatch[1]).toString();
-      return `https://maps.google.com/?cid=${cidDecimal}`;
-    } catch (e) {
-      // Fallback: kembalikan URL asli
-    }
-  }
-  return url;
+  return url.trim();
 }
 
 // ─────────────────────────────────────────────

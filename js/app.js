@@ -154,6 +154,7 @@ async function processSingleURL(url, apiKey) {
     link: extracted.cleanLink,
     address: normalizedAddress,
     status: geocodeResult.status,
+    fromViewport: extracted.fromViewport,
   });
 
   return location;

@@ -219,8 +219,11 @@ function checkDuplicate(newItem, tableData, archiveData) {
   if (byName.isDuplicate) return byName;
 
   // 3. Cek berdasarkan jarak (Haversine)
-  const byDistance = checkDuplicateByDistance(lat, lng, filteredData, currentId);
-  if (byDistance.isDuplicate) return byDistance;
+  // Abaikan jika jarak tidak relevan (misal koordinat didapat dari viewport / @lat,lng yang tidak presisi)
+  if (!newItem.fromViewport) {
+    const byDistance = checkDuplicateByDistance(lat, lng, filteredData, currentId);
+    if (byDistance.isDuplicate) return byDistance;
+  }
 
   return { isDuplicate: false, reason: '' };
 }
