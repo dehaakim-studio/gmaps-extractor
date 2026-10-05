@@ -18,21 +18,31 @@
 // ─────────────────────────────────────────────
 
 /**
- * Mengekstrak nama tempat dari URL Google Maps melalui pola /place/NAMA_TEMPAT/
+ * Mengekstrak nama tempat dan alamat dari URL Google Maps melalui pola /place/NAMA_TEMPAT/
  * @param {string} url
- * @returns {string} Nama tempat, atau 'Tidak ditemukan' jika tidak ada.
+ * @returns {{ name: string, addressFromUrl: string|null }}
  */
-function extractPlaceName(url) {
-  if (!url) return 'Tidak ditemukan';
+function extractPlaceNameAndAddress(url) {
+  if (!url) return { name: 'Tidak ditemukan', addressFromUrl: null };
   const nameMatch = url.match(/\/place\/([^\/]+)\//);
   if (nameMatch) {
+    let decoded = '';
     try {
-      return decodeURIComponent(nameMatch[1].replace(/\+/g, ' '));
+      decoded = decodeURIComponent(nameMatch[1].replace(/\+/g, ' '));
     } catch (e) {
-      return nameMatch[1].replace(/\+/g, ' ');
+      decoded = nameMatch[1].replace(/\+/g, ' ');
     }
+    
+    // Pisahkan nama dan alamat berdasarkan koma pertama
+    const parts = decoded.split(',');
+    if (parts.length > 1) {
+      const name = parts[0].trim();
+      const addressFromUrl = parts.slice(1).join(',').trim();
+      return { name, addressFromUrl };
+    }
+    return { name: decoded.trim(), addressFromUrl: null };
   }
-  return 'Tidak ditemukan';
+  return { name: 'Tidak ditemukan', addressFromUrl: null };
 }
 
 // ─────────────────────────────────────────────
@@ -152,12 +162,13 @@ function buildCleanLink(url) {
  *   lat: string|null,
  *   lng: string|null,
  *   cleanLink: string,
- *   fromViewport: boolean
+ *   fromViewport: boolean,
+ *   addressFromUrl: string|null
  * }}
  */
 function parseGmapsURL(url) {
-  const name = extractPlaceName(url);
+  const { name, addressFromUrl } = extractPlaceNameAndAddress(url);
   const { lat, lng, fromViewport } = extractCoordinates(url);
   const cleanLink = buildCleanLink(url);
-  return { name, lat, lng, cleanLink, fromViewport };
+  return { name, lat, lng, cleanLink, fromViewport, addressFromUrl };
 }

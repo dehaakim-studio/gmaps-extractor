@@ -123,13 +123,18 @@ async function processSingleURL(url, apiKey) {
     });
   }
 
-  // ── TAHAP 4: Reverse Geocoding ────────────────────
+  // ── TAHAP 4: Reverse Geocoding / URL Address ──────
   let geocodeResult = { address: '', status: STATUS.VALID, fromCache: false };
 
-  if (apiKey && extracted.lat && extracted.lng) {
+  if (extracted.addressFromUrl) {
+    // Gunakan alamat spesifik dari link URL agar tidak tertukar/sama persis dengan sebelahnya
+    geocodeResult.address = extracted.addressFromUrl;
+    geocodeResult.status = STATUS.VALID;
+    // Tetap bisa jalankan geocode async di background kalau butuh, tapi di sini kita pakai data URL
+  } else if (apiKey && extracted.lat && extracted.lng) {
     geocodeResult = await reverseGeocode(extracted.lat, extracted.lng, apiKey);
   } else {
-    geocodeResult.address = 'API Key tidak tersedia untuk geocoding.';
+    geocodeResult.address = 'API Key tidak tersedia untuk geocoding dan alamat URL kosong.';
     geocodeResult.status = STATUS.GEOCODING_FAILED;
   }
 
