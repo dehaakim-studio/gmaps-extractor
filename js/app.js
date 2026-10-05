@@ -497,6 +497,91 @@ function handleFilterStatus(value) {
 }
 
 // ─────────────────────────────────────────────
+// PENGATURAN APLIKASI
+// ─────────────────────────────────────────────
+
+function openSettingsModal() {
+  const modal = document.getElementById('settings-modal');
+  if (modal) {
+    modal.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+  }
+}
+
+function closeSettingsModal() {
+  const modal = document.getElementById('settings-modal');
+  if (modal) {
+    modal.style.display = 'none';
+    document.body.style.overflow = 'auto';
+  }
+}
+
+function loadSettings() {
+  const defaultSettings = {
+    showKategori: true,
+    showKecamatan: true
+  };
+  const saved = localStorage.getItem('app-settings');
+  let settings = defaultSettings;
+  if (saved) {
+    try {
+      settings = { ...defaultSettings, ...JSON.parse(saved) };
+    } catch (e) {
+      console.error('Failed to parse settings', e);
+    }
+  }
+  
+  // Update UI Checkboxes
+  const cbKategori = document.getElementById('setting-show-kategori');
+  const cbKecamatan = document.getElementById('setting-show-kecamatan');
+  
+  if (cbKategori) cbKategori.checked = settings.showKategori;
+  if (cbKecamatan) cbKecamatan.checked = settings.showKecamatan;
+  
+  applySettingsToUI(settings);
+}
+
+function applySettingsToUI(settings) {
+  if (settings.showKategori) {
+    document.body.classList.remove('hide-col-kategori');
+  } else {
+    document.body.classList.add('hide-col-kategori');
+  }
+  
+  if (settings.showKecamatan) {
+    document.body.classList.remove('hide-col-kecamatan');
+  } else {
+    document.body.classList.add('hide-col-kecamatan');
+  }
+}
+
+function saveCurrentSettingsFromUI(showToastMsg = false) {
+  const cbKategori = document.getElementById('setting-show-kategori');
+  const cbKecamatan = document.getElementById('setting-show-kecamatan');
+  
+  const settings = {
+    showKategori: cbKategori ? cbKategori.checked : true,
+    showKecamatan: cbKecamatan ? cbKecamatan.checked : true
+  };
+  
+  localStorage.setItem('app-settings', JSON.stringify(settings));
+  applySettingsToUI(settings);
+  
+  if (showToastMsg && typeof showToast === 'function') {
+    showToast('Pengaturan berhasil disimpan!');
+    closeSettingsModal();
+  }
+}
+
+function resetDefaultSettings() {
+  const cbKategori = document.getElementById('setting-show-kategori');
+  const cbKecamatan = document.getElementById('setting-show-kecamatan');
+  if (cbKategori) cbKategori.checked = true;
+  if (cbKecamatan) cbKecamatan.checked = true;
+  saveCurrentSettingsFromUI(true);
+}
+
+// ─────────────────────────────────────────────
 // INISIALISASI
 // ─────────────────────────────────────────────
 
@@ -504,6 +589,9 @@ document.addEventListener('DOMContentLoaded', () => {
   // Inisialisasi tema
   const savedTheme = localStorage.getItem(STORAGE_KEYS.THEME) || 'dark';
   updateThemeIcon(savedTheme);
+
+  // Load Settings
+  if (typeof loadSettings === 'function') loadSettings();
 
   // Load API Key
   const savedKey = loadApiKey();

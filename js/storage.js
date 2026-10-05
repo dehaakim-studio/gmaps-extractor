@@ -22,6 +22,7 @@ const STORAGE_KEYS = {
   ARCHIVE_DATA: 'gmaps_archive_data',
   API_KEY: 'gmaps_api_key',
   THEME: 'app-theme',
+  SETTINGS: 'gmaps_app_settings',
 };
 
 // ─────────────────────────────────────────────
@@ -198,4 +199,31 @@ function saveApiKey(key) {
  */
 function removeApiKey() {
   localStorage.removeItem(STORAGE_KEYS.API_KEY);
+}
+
+/**
+ * Memuat pengaturan aplikasi dari LocalStorage.
+ * @returns {object}
+ */
+function loadAppSettings() {
+  const defaultSettings = {
+    showKategori: true,
+    showKecamatan: true,
+    categories: ['Masjid', 'Mushola', 'Sekolah', 'Kantor', 'Fasilitas Umum', 'Tempat Usaha', 'Lainnya']
+  };
+  const saved = loadFromStorage(STORAGE_KEYS.SETTINGS);
+  if (!saved || typeof saved !== 'object') return defaultSettings;
+  return {
+    showKategori: typeof saved.showKategori === 'boolean' ? saved.showKategori : true,
+    showKecamatan: typeof saved.showKecamatan === 'boolean' ? saved.showKecamatan : true,
+    categories: Array.isArray(saved.categories) && saved.categories.length > 0 ? saved.categories : defaultSettings.categories
+  };
+}
+
+/**
+ * Menyimpan pengaturan aplikasi ke LocalStorage.
+ * @param {object} settings
+ */
+function saveAppSettings(settings) {
+  saveToStorage(STORAGE_KEYS.SETTINGS, settings);
 }

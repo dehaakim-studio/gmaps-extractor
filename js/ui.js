@@ -301,8 +301,8 @@ function renderTable(tableData, onDelete) {
     tr.innerHTML = `
       <td>${index + 1}</td>
       <td>${escapeHTML(row.nama_tempat || row.name || '-')}</td>
-      <td>${renderKategoriSelect(rowId, row.kategori || '', 'current')}</td>
-      <td><input type="text" value="${escapeHTML(row.kecamatan || '')}" onchange="updateRowKecamatan('${rowId}', this.value, 'current')" placeholder="-" style="width: 100px; padding: 4px; font-size: 0.8rem; border-radius: 4px; border: 1px solid var(--border-color); background: var(--bg-color); color: var(--text-main);"></td>
+      <td class="col-kategori">${renderKategoriSelect(rowId, row.kategori || '', 'current')}</td>
+      <td class="col-kecamatan"><input type="text" value="${escapeHTML(row.kecamatan || '')}" onchange="updateRowKecamatan('${rowId}', this.value, 'current')" placeholder="-" style="width: 100px; padding: 4px; font-size: 0.8rem; border-radius: 4px; border: 1px solid var(--border-color); background: var(--bg-color); color: var(--text-main);"></td>
       <td>${escapeHTML(row.alamat || row.address || '-')}</td>
       <td><a href="${escapeHTML(row.link_google_maps || row.link || '#')}" target="_blank" rel="noopener noreferrer" style="color:var(--primary);">Buka Link</a></td>
       <td>${escapeHTML(row.latitude || row.lat || '-')}</td>
@@ -345,8 +345,8 @@ function renderArchiveTable(archiveData, onDelete) {
       <td>${index + 1}</td>
       <td>${escapeHTML(row.tanggal || row.date || '-')}</td>
       <td>${escapeHTML(row.nama_tempat || row.name || '-')}</td>
-      <td>${renderKategoriSelect(rowId, row.kategori || '', 'archive')}</td>
-      <td><input type="text" value="${escapeHTML(row.kecamatan || '')}" onchange="updateRowKecamatan('${rowId}', this.value, 'archive')" placeholder="-" style="width: 100px; padding: 4px; font-size: 0.8rem; border-radius: 4px; border: 1px solid var(--border-color); background: var(--bg-color); color: var(--text-main);"></td>
+      <td class="col-kategori">${renderKategoriSelect(rowId, row.kategori || '', 'archive')}</td>
+      <td class="col-kecamatan"><input type="text" value="${escapeHTML(row.kecamatan || '')}" onchange="updateRowKecamatan('${rowId}', this.value, 'archive')" placeholder="-" style="width: 100px; padding: 4px; font-size: 0.8rem; border-radius: 4px; border: 1px solid var(--border-color); background: var(--bg-color); color: var(--text-main);"></td>
       <td>${escapeHTML(row.alamat || row.address || '-')}</td>
       <td><a href="${escapeHTML(row.link_google_maps || row.link || '#')}" target="_blank" rel="noopener noreferrer" style="color:var(--primary);">Buka Link</a></td>
       <td>${escapeHTML(row.latitude || row.lat || '-')}</td>

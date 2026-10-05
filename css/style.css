@@ -738,3 +738,13 @@ button:active {
     align-items: stretch;
   }
 }
+
+/* ─────────────────────────────────────────────
+   COLUMN VISIBILITY TOGGLES
+───────────────────────────────────────────── */
+body.hide-col-kategori .col-kategori {
+  display: none !important;
+}
+body.hide-col-kecamatan .col-kecamatan {
+  display: none !important;
+}

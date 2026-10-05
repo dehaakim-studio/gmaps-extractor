@@ -47,7 +47,10 @@
           <h2>Sistem Ekstraksi dan Pengolahan Data Geospasial Berbasis WebGIS</h2>
           <p>Sistem berbasis WebGIS untuk mengekstraksi informasi lokasi dari tautan Google Maps, mengolah data koordinat dan alamat, serta menyajikan lokasi pada peta interaktif. ~ product by DH Founder</p>
         </div>
-        <button class="theme-toggle-btn" id="theme-toggle" onclick="toggleTheme()" title="Ubah Tema">🌙</button>
+        <div style="display: flex; gap: 8px; align-items: center;">
+          <button class="theme-toggle-btn" id="settings-toggle" onclick="openSettingsModal()" title="Pengaturan App">⚙️</button>
+          <button class="theme-toggle-btn" id="theme-toggle" onclick="toggleTheme()" title="Ubah Tema">🌙</button>
+        </div>
       </div>
 
       <!-- 1. Input API Key -->
@@ -271,8 +274,8 @@
             <tr>
               <th>No</th>
               <th onclick="setSort('nama','asc'); refreshUI();" title="Sort Nama">Nama Tempat ↕</th>
-              <th>Kategori</th>
-              <th onclick="setSort('kecamatan','asc'); refreshUI();" title="Sort Kecamatan">Kecamatan ↕</th>
+              <th class="col-kategori">Kategori</th>
+              <th class="col-kecamatan" onclick="setSort('kecamatan','asc'); refreshUI();" title="Sort Kecamatan">Kecamatan ↕</th>
               <th>Alamat Lengkap</th>
               <th>Link Google Maps</th>
               <th onclick="setSort('latitude','asc'); refreshUI();" title="Sort Latitude">Latitude ↕</th>
@@ -295,8 +298,8 @@
               <th>No</th>
               <th onclick="setSort('tanggal','desc'); refreshUI();" title="Sort Tanggal">Tanggal ↕</th>
               <th onclick="setSort('nama','asc'); refreshUI();" title="Sort Nama">Nama Tempat ↕</th>
-              <th>Kategori</th>
-              <th onclick="setSort('kecamatan','asc'); refreshUI();">Kecamatan ↕</th>
+              <th class="col-kategori">Kategori</th>
+              <th class="col-kecamatan" onclick="setSort('kecamatan','asc'); refreshUI();">Kecamatan ↕</th>
               <th>Alamat Lengkap</th>
               <th>Link Google Maps</th>
               <th>Latitude</th>
@@ -317,6 +320,46 @@
 
   <!-- Toast Notification -->
   <div id="toast" class="toast" role="alert" aria-live="polite">Teks berhasil disalin!</div>
+
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <!-- MODAL: Pengaturan Aplikasi                                  -->
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <div id="settings-modal"
+    style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.75); z-index:9999; justify-content:center; align-items:center;">
+    <div class="modal-content" style="max-width: 500px;">
+      <div
+        style="padding:15px 20px; border-bottom:1px solid var(--border-color); display:flex; justify-content:space-between; align-items:center; background-color: rgba(var(--card-bg-rgb), 0.3);">
+        <h3 style="margin:0; font-size:1.1rem; color: var(--text-main);">⚙️ Pengaturan Fitur & Kolom</h3>
+        <button onclick="closeSettingsModal()"
+          style="background:none; border:none; color:var(--text-main); font-size:1.5rem; cursor:pointer; padding:0; line-height:1;">&times;</button>
+      </div>
+      <div style="padding: 20px; color: var(--text-main); font-size: 0.95rem; line-height: 1.6;">
+        
+        <h4 style="color: var(--primary); margin-top: 0; margin-bottom: 12px; font-size: 1rem;">Visibilitas Kolom Tabel</h4>
+        <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; background: rgba(0,0,0,0.2); padding: 12px; border-radius: 8px; border: 1px solid var(--border-color);">
+          <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; user-select: none;">
+            <input type="checkbox" id="setting-show-kategori" onchange="saveCurrentSettingsFromUI()" style="width: 18px; height: 18px; accent-color: var(--primary);">
+            <span>Aktifkan Kolom <strong>Kategori</strong></span>
+          </label>
+          <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; user-select: none;">
+            <input type="checkbox" id="setting-show-kecamatan" onchange="saveCurrentSettingsFromUI()" style="width: 18px; height: 18px; accent-color: var(--primary);">
+            <span>Aktifkan Kolom <strong>Kecamatan</strong></span>
+          </label>
+        </div>
+
+        <h4 style="color: var(--primary); margin-top: 0; margin-bottom: 8px; font-size: 1rem;">Kelola Daftar Kategori Custom</h4>
+        <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 10px;">Pisahkan tiap opsi kategori dengan koma (<code>,</code>).</p>
+        <textarea id="setting-categories-text" rows="3" placeholder="Masjid, Mushola, Sekolah, Kantor, ..."
+          style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-color); color: var(--text-main); font-size: 0.9rem; font-family: inherit; margin-bottom: 15px; resize: vertical;"></textarea>
+
+        <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px;">
+          <button class="btn-copy" onclick="resetDefaultSettings()" style="padding: 6px 14px; cursor: pointer;">Reset Default</button>
+          <button class="btn-process" onclick="saveCurrentSettingsFromUI(true)" style="padding: 6px 18px; cursor: pointer;">Simpan Pengaturan</button>
+        </div>
+
+      </div>
+    </div>
+  </div>
 
   <!-- ═══════════════════════════════════════════════════════════ -->
   <!-- MODAL: API Key Instructions                               -->

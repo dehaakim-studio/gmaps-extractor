@@ -64,40 +64,61 @@ function exportToExcel(data, filename) {
   }
 
   try {
-    const wsData = [
-      ['No', 'Nama Tempat', 'Kategori', 'Kecamatan', 'Alamat Lengkap', 'Link Google Maps', 'Latitude', 'Longitude', 'Status', 'Tanggal'],
-    ];
+    // Baca Pengaturan
+    const saved = localStorage.getItem('app-settings');
+    let settings = { showKategori: true, showKecamatan: true };
+    if (saved) {
+      try { settings = { ...settings, ...JSON.parse(saved) }; } catch (e) {}
+    }
+
+    const headers = ['No', 'Nama Tempat'];
+    if (settings.showKategori) headers.push('Kategori');
+    if (settings.showKecamatan) headers.push('Kecamatan');
+    headers.push('Alamat Lengkap', 'Link Google Maps', 'Latitude', 'Longitude', 'Status', 'Tanggal');
+    
+    const wsData = [headers];
 
     data.forEach((row, idx) => {
-      wsData.push([
+      const rowData = [
         idx + 1,
         safeStr(row.nama_tempat || row.name),
-        safeStr(row.kategori),
-        safeStr(row.kecamatan),
+      ];
+      if (settings.showKategori) rowData.push(safeStr(row.kategori));
+      if (settings.showKecamatan) rowData.push(safeStr(row.kecamatan));
+      
+      rowData.push(
         safeStr(row.alamat || row.address),
         safeStr(row.link_google_maps || row.link),
         safeStr(row.latitude || row.lat),
         safeStr(row.longitude || row.lng),
         safeStr(row.status || STATUS.VALID),
-        safeStr(row.tanggal || row.date),
-      ]);
+        safeStr(row.tanggal || row.date)
+      );
+      wsData.push(rowData);
     });
 
     const wb = XLSX.utils.book_new();
     const ws = XLSX.utils.aoa_to_sheet(wsData);
 
-    // Tambahkan hyperlink untuk kolom Link Google Maps (indeks kolom 5)
+    // Tambahkan hyperlink untuk kolom Link Google Maps
+    let linkColIdx = 3; // 'No'(0), 'Nama Tempat'(1), 'Alamat Lengkap'(2, assuming no kat/kec)
+    if (settings.showKategori) linkColIdx++;
+    if (settings.showKecamatan) linkColIdx++;
+    // sekarang linkColIdx menunjuk ke indeks 'Link Google Maps'
+
     for (let R = 1; R <= data.length; ++R) {
-      const cellRef = XLSX.utils.encode_cell({ c: 5, r: R });
+      const cellRef = XLSX.utils.encode_cell({ c: linkColIdx, r: R });
       if (ws[cellRef] && ws[cellRef].v) {
         ws[cellRef].l = { Target: ws[cellRef].v };
       }
     }
 
-    ws['!cols'] = [
-      { wch: 5 }, { wch: 30 }, { wch: 20 }, { wch: 20 },
-      { wch: 50 }, { wch: 40 }, { wch: 15 }, { wch: 15 }, { wch: 18 }, { wch: 22 },
-    ];
+    const cols = [{ wch: 5 }, { wch: 30 }];
+    if (settings.showKategori) cols.push({ wch: 20 });
+    if (settings.showKecamatan) cols.push({ wch: 20 });
+    cols.push({ wch: 50 }, { wch: 40 }, { wch: 15 }, { wch: 15 }, { wch: 18 }, { wch: 22 });
+    
+    ws['!cols'] = cols;
 
     XLSX.utils.book_append_sheet(wb, ws, 'Data Maps');
     XLSX.writeFile(wb, `${filename.trim()}.xlsx`);
