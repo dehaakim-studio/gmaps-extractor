@@ -66,7 +66,7 @@ function exportToExcel(data, filename) {
   try {
     // Baca Pengaturan
     const saved = localStorage.getItem('app-settings');
-    let settings = { showKategori: true, showKecamatan: true };
+    let settings = { showKategori: true, showKecamatan: true, showLink: true };
     if (saved) {
       try { settings = { ...settings, ...JSON.parse(saved) }; } catch (e) {}
     }
@@ -74,7 +74,9 @@ function exportToExcel(data, filename) {
     const headers = ['No', 'Nama Tempat'];
     if (settings.showKategori) headers.push('Kategori');
     if (settings.showKecamatan) headers.push('Kecamatan');
-    headers.push('Alamat Lengkap', 'Link Google Maps', 'Latitude', 'Longitude', 'Status', 'Tanggal');
+    headers.push('Alamat Lengkap');
+    if (settings.showLink !== false) headers.push('Link Google Maps');
+    headers.push('Latitude', 'Longitude', 'Status', 'Tanggal');
     
     const wsData = [headers];
 
@@ -86,9 +88,10 @@ function exportToExcel(data, filename) {
       if (settings.showKategori) rowData.push(safeStr(row.kategori));
       if (settings.showKecamatan) rowData.push(safeStr(row.kecamatan));
       
+      rowData.push(safeStr(row.alamat || row.address));
+      if (settings.showLink !== false) rowData.push(safeStr(row.link_google_maps || row.link));
+      
       rowData.push(
-        safeStr(row.alamat || row.address),
-        safeStr(row.link_google_maps || row.link),
         safeStr(row.latitude || row.lat),
         safeStr(row.longitude || row.lng),
         safeStr(row.status || STATUS.VALID),
@@ -101,22 +104,36 @@ function exportToExcel(data, filename) {
     const ws = XLSX.utils.aoa_to_sheet(wsData);
 
     // Tambahkan hyperlink untuk kolom Link Google Maps
-    let linkColIdx = 3; // 'No'(0), 'Nama Tempat'(1), 'Alamat Lengkap'(2, assuming no kat/kec)
-    if (settings.showKategori) linkColIdx++;
-    if (settings.showKecamatan) linkColIdx++;
-    // sekarang linkColIdx menunjuk ke indeks 'Link Google Maps'
+    if (settings.showLink !== false) {
+      let linkColIdx = 2; // 'No'(0), 'Nama Tempat'(1), 'Alamat Lengkap'(2 if kat/kec is off)
+      if (settings.showKategori) linkColIdx++;
+      if (settings.showKecamatan) linkColIdx++;
+      // sekarang linkColIdx menunjuk ke indeks 'Link Google Maps'
 
-    for (let R = 1; R <= data.length; ++R) {
-      const cellRef = XLSX.utils.encode_cell({ c: linkColIdx, r: R });
-      if (ws[cellRef] && ws[cellRef].v) {
-        ws[cellRef].l = { Target: ws[cellRef].v };
+      for (let R = 1; R <= data.length; ++R) {
+        const cellRef = XLSX.utils.encode_cell({ c: linkColIdx + 1, r: R }); // Wait, 'No', 'Nama', ['Kategori'], ['Kecamatan'], 'Alamat', 'Link' -> If kat & kec on, Alamat is idx 4. Link is idx 5. So linkColIdx above would be 2+1+1 = 4? No wait, idx 0:No, 1:Nama, 2:Kategori, 3:Kecamatan, 4:Alamat, 5:Link. So linkColIdx should start at 3? No, start at 3 ('Alamat' offset? No, 'Alamat' is always there).
+        // Let's recount exactly.
+        let linkIdx = 2; // 0=No, 1=Nama, 2=Alamat (base)
+        if (settings.showKategori) linkIdx++;
+        if (settings.showKecamatan) linkIdx++;
+        // linkIdx is now the index of Alamat Lengkap. Link Google Maps is next.
+        linkIdx++;
+        
+        for (let R = 1; R <= data.length; ++R) {
+          const cellRef = XLSX.utils.encode_cell({ c: linkIdx, r: R });
+          if (ws[cellRef] && ws[cellRef].v) {
+            ws[cellRef].l = { Target: ws[cellRef].v };
+          }
+        }
       }
     }
 
     const cols = [{ wch: 5 }, { wch: 30 }];
     if (settings.showKategori) cols.push({ wch: 20 });
     if (settings.showKecamatan) cols.push({ wch: 20 });
-    cols.push({ wch: 50 }, { wch: 40 }, { wch: 15 }, { wch: 15 }, { wch: 18 }, { wch: 22 });
+    cols.push({ wch: 50 }); // Alamat
+    if (settings.showLink !== false) cols.push({ wch: 40 }); // Link
+    cols.push({ wch: 15 }, { wch: 15 }, { wch: 18 }, { wch: 22 });
     
     ws['!cols'] = cols;
 

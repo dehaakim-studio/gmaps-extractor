@@ -748,3 +748,6 @@ body.hide-col-kategori .col-kategori {
 body.hide-col-kecamatan .col-kecamatan {
   display: none !important;
 }
+body.hide-col-link .col-link {
+  display: none !important;
+}

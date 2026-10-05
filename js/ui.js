@@ -304,7 +304,7 @@ function renderTable(tableData, onDelete) {
       <td class="col-kategori">${renderKategoriSelect(rowId, row.kategori || '', 'current')}</td>
       <td class="col-kecamatan"><input type="text" value="${escapeHTML(row.kecamatan || '')}" onchange="updateRowKecamatan('${rowId}', this.value, 'current')" placeholder="-" style="width: 100px; padding: 4px; font-size: 0.8rem; border-radius: 4px; border: 1px solid var(--border-color); background: var(--bg-color); color: var(--text-main);"></td>
       <td>${escapeHTML(row.alamat || row.address || '-')}</td>
-      <td><a href="${escapeHTML(row.link_google_maps || row.link || '#')}" target="_blank" rel="noopener noreferrer" style="color:var(--primary);">Buka Link</a></td>
+      <td class="col-link"><a href="${escapeHTML(row.link_google_maps || row.link || '#')}" target="_blank" rel="noopener noreferrer" style="color:var(--primary);">Buka Link</a></td>
       <td>${escapeHTML(row.latitude || row.lat || '-')}</td>
       <td>${escapeHTML(row.longitude || row.lng || '-')}</td>
       <td>${renderStatusBadge(row.status)}</td>
@@ -348,7 +348,7 @@ function renderArchiveTable(archiveData, onDelete) {
       <td class="col-kategori">${renderKategoriSelect(rowId, row.kategori || '', 'archive')}</td>
       <td class="col-kecamatan"><input type="text" value="${escapeHTML(row.kecamatan || '')}" onchange="updateRowKecamatan('${rowId}', this.value, 'archive')" placeholder="-" style="width: 100px; padding: 4px; font-size: 0.8rem; border-radius: 4px; border: 1px solid var(--border-color); background: var(--bg-color); color: var(--text-main);"></td>
       <td>${escapeHTML(row.alamat || row.address || '-')}</td>
-      <td><a href="${escapeHTML(row.link_google_maps || row.link || '#')}" target="_blank" rel="noopener noreferrer" style="color:var(--primary);">Buka Link</a></td>
+      <td class="col-link"><a href="${escapeHTML(row.link_google_maps || row.link || '#')}" target="_blank" rel="noopener noreferrer" style="color:var(--primary);">Buka Link</a></td>
       <td>${escapeHTML(row.latitude || row.lat || '-')}</td>
       <td>${escapeHTML(row.longitude || row.lng || '-')}</td>
       <td>${renderStatusBadge(row.status)}</td>
@@ -393,45 +393,7 @@ function updateStats(activeData) {
   el('stat-invalid').textContent = invalid;
   el('stat-incomplete') && (el('stat-incomplete').textContent = incomplete);
 
-  // ── Geospatial Summary (Phase 3F) ──
-  let validPoints = 0;
-  let minLat = 90, maxLat = -90, minLng = 180, maxLng = -180;
-  let sumLat = 0, sumLng = 0;
 
-  data.forEach(d => {
-    const s = d.status || '';
-    if (s === STATUS.VALID || s === STATUS.DUPLIKAT || s === STATUS.GEOCODING_FAILED) {
-      const lat = parseFloat(d.latitude || d.lat);
-      const lng = parseFloat(d.longitude || d.lng);
-      
-      if (!isNaN(lat) && !isNaN(lng) && typeof isValidCoordinate === 'function' && isValidCoordinate(lat, lng)) {
-        validPoints++;
-        sumLat += lat;
-        sumLng += lng;
-        
-        if (lat < minLat) minLat = lat;
-        if (lat > maxLat) maxLat = lat;
-        if (lng < minLng) minLng = lng;
-        if (lng > maxLng) maxLng = lng;
-      }
-    }
-  });
-
-  if (el('geo-points')) el('geo-points').textContent = validPoints;
-  if (el('geo-bbox')) {
-    if (validPoints > 0) {
-      el('geo-bbox').textContent = `Min[${minLat.toFixed(4)}, ${minLng.toFixed(4)}] Max[${maxLat.toFixed(4)}, ${maxLng.toFixed(4)}]`;
-    } else {
-      el('geo-bbox').textContent = '-';
-    }
-  }
-  if (el('geo-mean')) {
-    if (validPoints > 0) {
-      el('geo-mean').textContent = `${(sumLat / validPoints).toFixed(5)}, ${(sumLng / validPoints).toFixed(5)}`;
-    } else {
-      el('geo-mean').textContent = '-';
-    }
-  }
 }
 
 // ─────────────────────────────────────────────

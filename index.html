@@ -125,14 +125,7 @@
             <button class="btn-copy" onclick="copyText('resLng')">Copy</button>
           </div>
         </div>
-        <div class="field-row">
-          <label>Pasted Link</label>
-          <div class="field-content">
-            <span id="resLink" class="field-value">-</span>
-            <button class="btn-copy" onclick="copyText('resLink')">Copy</button>
-          </div>
-        </div>
-        <button class="btn-copy-all" onclick="copyAllFormatted()">📋 COPY SEMUA FORMAT REKAP</button>
+
       </div>
 
       <!-- Peta WebGIS -->
@@ -229,15 +222,7 @@
         </div>
       </div>
 
-      <!-- ── Ringkasan Geospasial ── -->
-      <div id="geo-summary" style="background: rgba(var(--card-bg-rgb), 0.5); padding: 12px; border-radius: 12px; border: 1px solid var(--border-color); margin-bottom: 16px; display: flex; flex-direction: column; gap: 8px;">
-        <h4 style="margin:0; font-size: 0.9rem; color: var(--text-main);">Ringkasan Geospasial</h4>
-        <div style="display: flex; gap: 16px; font-size: 0.85rem; color: var(--text-muted); flex-wrap: wrap;">
-          <div><strong style="color: var(--primary);">Bounding Box:</strong> <span id="geo-bbox">-</span></div>
-          <div><strong style="color: var(--primary);">Mean Coordinate:</strong> <span id="geo-mean">-</span></div>
-          <div><strong style="color: var(--primary);">Valid Points:</strong> <span id="geo-points">0</span></div>
-        </div>
-      </div>
+
 
       <!-- ── Filter & Search Toolbar ── -->
       <div class="filter-toolbar">
@@ -277,7 +262,7 @@
               <th class="col-kategori">Kategori</th>
               <th class="col-kecamatan" onclick="setSort('kecamatan','asc'); refreshUI();" title="Sort Kecamatan">Kecamatan ↕</th>
               <th>Alamat Lengkap</th>
-              <th>Link Google Maps</th>
+              <th class="col-link">Link Google Maps</th>
               <th onclick="setSort('latitude','asc'); refreshUI();" title="Sort Latitude">Latitude ↕</th>
               <th onclick="setSort('longitude','asc'); refreshUI();" title="Sort Longitude">Longitude ↕</th>
               <th onclick="setSort('status','asc'); refreshUI();" title="Sort Status">Status ↕</th>
@@ -301,7 +286,7 @@
               <th class="col-kategori">Kategori</th>
               <th class="col-kecamatan" onclick="setSort('kecamatan','asc'); refreshUI();">Kecamatan ↕</th>
               <th>Alamat Lengkap</th>
-              <th>Link Google Maps</th>
+              <th class="col-link">Link Google Maps</th>
               <th>Latitude</th>
               <th>Longitude</th>
               <th onclick="setSort('status','asc'); refreshUI();" title="Sort Status">Status ↕</th>
@@ -344,6 +329,10 @@
           <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; user-select: none;">
             <input type="checkbox" id="setting-show-kecamatan" onchange="saveCurrentSettingsFromUI()" style="width: 18px; height: 18px; accent-color: var(--primary);">
             <span>Aktifkan Kolom <strong>Kecamatan</strong></span>
+          </label>
+          <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; user-select: none;">
+            <input type="checkbox" id="setting-show-link" onchange="saveCurrentSettingsFromUI()" style="width: 18px; height: 18px; accent-color: var(--primary);">
+            <span>Aktifkan Kolom <strong>Link Google Maps</strong></span>
           </label>
         </div>
 

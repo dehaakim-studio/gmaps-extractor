@@ -428,17 +428,6 @@ function copyText(elementId) {
   }
 }
 
-function copyAllFormatted() {
-  const name = document.getElementById('resName')?.textContent;
-  const address = document.getElementById('resAddress')?.textContent;
-  const lat = document.getElementById('resLat')?.textContent;
-  const lng = document.getElementById('resLng')?.textContent;
-  const link = document.getElementById('resLink')?.textContent;
-
-  const formatted = `Nama Lokasi : ${name}\nAlamat      : ${address}\nLatitude    : ${lat}\nLongitude   : ${lng}\nLink Gmaps  : ${link}`;
-  navigator.clipboard.writeText(formatted);
-  showToast('Seluruh rekap data berhasil disalin!');
-}
 
 // ─────────────────────────────────────────────
 // RESET HELPERS
@@ -525,7 +514,8 @@ function closeSettingsModal() {
 function loadSettings() {
   const defaultSettings = {
     showKategori: true,
-    showKecamatan: true
+    showKecamatan: true,
+    showLink: true
   };
   const saved = localStorage.getItem('app-settings');
   let settings = defaultSettings;
@@ -540,9 +530,11 @@ function loadSettings() {
   // Update UI Checkboxes
   const cbKategori = document.getElementById('setting-show-kategori');
   const cbKecamatan = document.getElementById('setting-show-kecamatan');
+  const cbLink = document.getElementById('setting-show-link');
   
   if (cbKategori) cbKategori.checked = settings.showKategori;
   if (cbKecamatan) cbKecamatan.checked = settings.showKecamatan;
+  if (cbLink) cbLink.checked = settings.showLink;
   
   applySettingsToUI(settings);
 }
@@ -559,15 +551,23 @@ function applySettingsToUI(settings) {
   } else {
     document.body.classList.add('hide-col-kecamatan');
   }
+
+  if (settings.showLink) {
+    document.body.classList.remove('hide-col-link');
+  } else {
+    document.body.classList.add('hide-col-link');
+  }
 }
 
 function saveCurrentSettingsFromUI(showToastMsg = false) {
   const cbKategori = document.getElementById('setting-show-kategori');
   const cbKecamatan = document.getElementById('setting-show-kecamatan');
+  const cbLink = document.getElementById('setting-show-link');
   
   const settings = {
     showKategori: cbKategori ? cbKategori.checked : true,
-    showKecamatan: cbKecamatan ? cbKecamatan.checked : true
+    showKecamatan: cbKecamatan ? cbKecamatan.checked : true,
+    showLink: cbLink ? cbLink.checked : true
   };
   
   localStorage.setItem('app-settings', JSON.stringify(settings));
@@ -582,8 +582,10 @@ function saveCurrentSettingsFromUI(showToastMsg = false) {
 function resetDefaultSettings() {
   const cbKategori = document.getElementById('setting-show-kategori');
   const cbKecamatan = document.getElementById('setting-show-kecamatan');
+  const cbLink = document.getElementById('setting-show-link');
   if (cbKategori) cbKategori.checked = true;
   if (cbKecamatan) cbKecamatan.checked = true;
+  if (cbLink) cbLink.checked = true;
   saveCurrentSettingsFromUI(true);
 }
 
