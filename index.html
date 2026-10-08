@@ -53,23 +53,7 @@
         </div>
       </div>
 
-      <!-- 1. Input API Key -->
-      <div class="input-group">
-        <label for="apiKey">Google Maps / DistanceMatrix API Key <span
-            style="font-size: 0.8em; font-weight:normal; color:#94a3b8;">(Disimpan otomatis)</span></label>
-        <div class="input-row" style="display: flex; gap: 8px;">
-          <input type="password" id="apiKey" placeholder="Masukkan API Key (AIza... atau Elhv...)"
-            style="flex: 1; margin: 0;" />
-          <button class="btn-copy" onclick="pasteApiKey()" style="padding: 0 15px; cursor: pointer;">Paste</button>
-          <button class="btn-delete" onclick="resetApiKey()" title="Hapus API Key saat ini jika limit habis">Hapus</button>
-        </div>
-        <div style="margin-top: 6px; font-size: 0.85rem; color: var(--text-muted);">
-          Bagaimana cara mendapatkan key nya? <a href="#" onclick="openApiKeyModal(); return false;"
-            style="color: var(--primary); text-decoration: none;">Klik disini</a>
-        </div>
-      </div>
-
-      <!-- 2. Input URL Google Maps -->
+      <!-- 1. Input URL Google Maps -->
       <div class="input-group">
         <label for="gmapsUrl">Paste Link Google Maps (Gunakan Link Panjang)</label>
         <div class="input-row" style="display: flex; gap: 8px;">
@@ -318,6 +302,21 @@
           style="background:none; border:none; color:var(--text-main); font-size:1.5rem; cursor:pointer; padding:0; line-height:1;">&times;</button>
       </div>
       <div style="padding: 20px; color: var(--text-main); font-size: 0.95rem; line-height: 1.6;">
+        <h4 style="color: var(--primary); margin-top: 0; margin-bottom: 12px; font-size: 1rem;">Pengaturan API Key</h4>
+        <div style="margin-bottom: 20px;">
+          <label for="apiKey" style="display: block; margin-bottom: 6px; font-size: 0.9rem;">Google Maps / DistanceMatrix API Key <span
+              style="font-size: 0.8em; font-weight:normal; color:#94a3b8;">(Disimpan otomatis)</span></label>
+          <div class="input-row" style="display: flex; gap: 8px;">
+            <input type="password" id="apiKey" placeholder="Masukkan API Key"
+              style="flex: 1; margin: 0; padding: 10px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-color); color: var(--text-main); font-size: 0.9rem;" />
+            <button class="btn-copy" onclick="pasteApiKey()" style="padding: 0 15px; cursor: pointer; border-radius: 6px;">Paste</button>
+            <button class="btn-delete" onclick="resetApiKey()" title="Hapus API Key saat ini jika limit habis" style="border-radius: 6px;">Hapus</button>
+          </div>
+          <div style="margin-top: 6px; font-size: 0.85rem; color: var(--text-muted);">
+            Bagaimana cara mendapatkan key nya? <a href="#" onclick="openApiKeyModal(); return false;"
+              style="color: var(--primary); text-decoration: none;">Klik disini</a>
+          </div>
+        </div>
         
         <h4 style="color: var(--primary); margin-top: 0; margin-bottom: 12px; font-size: 1rem;">Visibilitas Kolom Tabel</h4>
         <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; background: rgba(0,0,0,0.2); padding: 12px; border-radius: 8px; border: 1px solid var(--border-color);">
