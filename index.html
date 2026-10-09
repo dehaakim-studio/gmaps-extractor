@@ -68,6 +68,13 @@
         if (e.key === 'Enter') checkLogin();
       });
     });
+
+    function logoutGeoLinker() {
+      localStorage.removeItem('geolinker_logged_in');
+      document.getElementById('login-password').value = '';
+      document.getElementById('login-error').style.display = 'none';
+      document.getElementById('login-overlay').style.display = 'flex';
+    }
   </script>
 
   <!-- ═══════════════════════════════════════════════════════════ -->
@@ -85,6 +92,7 @@
           <p>Platform ekstraksi data spasial otomatis yang menghasilkan informasi lokasi terstruktur untuk pemetaan dan perencanaan pembangunan daerah</p>
         </div>
         <div style="display: flex; gap: 8px; align-items: center;">
+          <button class="theme-toggle-btn" id="logout-btn" onclick="logoutGeoLinker()" title="Keluar (Logout)">🚪</button>
           <button class="theme-toggle-btn" id="settings-toggle" onclick="openSettingsModal()" title="Pengaturan App">⚙️</button>
           <button class="theme-toggle-btn" id="theme-toggle" onclick="toggleTheme()" title="Ubah Tema">🌙</button>
         </div>
