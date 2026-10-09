@@ -249,6 +249,9 @@ async function parseGmapsLink() {
   hideLoader();
   refreshUI();
 
+  // Kosongkan textarea setelah selesai diproses secara otomatis
+  document.getElementById('gmapsUrl').value = '';
+
   if (addedCount > 0) {
     showToast(`Berhasil menambahkan ${addedCount} dari ${urls.length} link!`);
   } else if (processedCount === 0) {
@@ -336,11 +339,14 @@ function switchTab(tab) {
   const activeStyle = { color: 'var(--primary)', borderBottom: '2px solid var(--primary)' };
   const inactiveStyle = { color: 'var(--text-muted)', borderBottom: '2px solid transparent' };
 
+  const currentWarning = document.getElementById('current-warning-box');
+
   if (tab === 'archive') {
     Object.assign(tabArchive.style, activeStyle);
     Object.assign(tabCurrent.style, inactiveStyle);
     currentWrapper.style.display = 'none';
     currentActions.style.display = 'none';
+    if (currentWarning) currentWarning.style.display = 'none';
     archiveWrapper.style.display = 'block';
     archiveActions.style.display = 'flex';
   } else {
@@ -350,6 +356,7 @@ function switchTab(tab) {
     archiveActions.style.display = 'none';
     currentWrapper.style.display = 'block';
     currentActions.style.display = 'flex';
+    if (currentWarning) currentWarning.style.display = 'block';
   }
 
   refreshUI();
@@ -617,6 +624,13 @@ document.addEventListener('DOMContentLoaded', () => {
   // Event: auto-save API Key
   document.getElementById('apiKey').addEventListener('input', function () {
     saveApiKey(this.value.trim());
+  });
+
+  // Event: Auto-process saat paste di textarea Google Maps Link
+  document.getElementById('gmapsUrl').addEventListener('paste', function () {
+    setTimeout(() => {
+      parseGmapsLink();
+    }, 50);
   });
 
   // Event: Enter pada API Key field → proses

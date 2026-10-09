@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="description"
     content="Sistem berbasis WebGIS untuk mengekstraksi informasi lokasi dari tautan Google Maps, mengolah data koordinat dan alamat, serta menyajikan lokasi pada peta interaktif. ~ product by DH Founder" />
-  <title>Sistem Ekstraksi dan Pengolahan Data Geospasial Berbasis WebGIS</title>
+  <title>GeoLinker - Ekstraksi Data Geospasial</title>
 
   <!-- Stylesheet -->
   <link rel="stylesheet" href="css/style.css" />
@@ -44,8 +44,8 @@
       <!-- Header -->
       <div class="header">
         <div class="header-text">
-          <h2>Sistem Ekstraksi dan Pengolahan Data Geospasial Berbasis WebGIS</h2>
-          <p>Sistem berbasis WebGIS untuk mengekstraksi informasi lokasi dari tautan Google Maps, mengolah data koordinat dan alamat, serta menyajikan lokasi pada peta interaktif. ~ product by DH Founder</p>
+          <h2>GeoLinker</h2>
+          <p>Platform ekstraksi data spasial otomatis yang menghasilkan informasi lokasi terstruktur untuk pemetaan dan perencanaan pembangunan daerah</p>
         </div>
         <div style="display: flex; gap: 8px; align-items: center;">
           <button class="theme-toggle-btn" id="settings-toggle" onclick="openSettingsModal()" title="Pengaturan App">⚙️</button>
@@ -61,8 +61,6 @@
             placeholder="https://www.google.com/maps/place/...
 (Pisahkan antar link dengan Enter. Maksimal 10 link)"
             style="flex: 1; margin: 0; padding: 12px; border-radius: 8px; border: 1px solid var(--border-color); background-color: rgba(var(--card-bg-rgb), 0.4); color: var(--text-main); font-size: 0.95rem; outline: none; transition: all 0.3s ease; resize: vertical;"></textarea>
-          <button class="btn-copy" onclick="pasteFromClipboard()"
-            style="padding: 0 15px; cursor: pointer;">Paste</button>
           <button class="btn-delete" onclick="resetForm()">Hapus</button>
         </div>
       </div>
@@ -236,6 +234,9 @@
       </div>
 
       <!-- ── Tabel Data Saat Ini ── -->
+      <div id="current-warning-box" style="background-color: rgba(245, 158, 11, 0.1); border-left: 4px solid #f59e0b; padding: 12px 15px; margin-bottom: 15px; font-size: 0.9rem; color: var(--text-main); border-radius: 4px; display: block; line-height: 1.5;">
+        <strong>⚠️ Perhatian:</strong> Harap simpan atau <em>export</em> data Anda terlebih dahulu. Mengingat tabel ini adalah ruang kerja sementara, maka seluruh data pada tabel ini akan <strong>terhapus otomatis setiap 24 jam</strong>. (Data yang tersimpan di Arsip Riwayat tetap aman).
+      </div>
       <div class="excel-table-wrapper" id="current-table-wrapper">
         <table class="excel-table" id="dataTable">
           <thead>
@@ -403,6 +404,28 @@
   <script src="js/export.js"></script>
   <script src="js/ui.js"></script>
   <script src="js/app.js"></script>
+
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <!-- FOOTER                                                      -->
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <footer style="
+    width: 100%;
+    padding: 14px 24px;
+    text-align: center;
+    font-size: 0.82rem;
+    color: var(--text-muted);
+    border-top: 1px solid var(--border-color);
+    background: rgba(var(--card-bg-rgb), 0.4);
+    letter-spacing: 0.02em;
+    user-select: none;
+  ">
+    <span>🛠️ <strong style="color: var(--text-main);">Product by DH Founder</strong> &mdash; Mas Hakim &nbsp;|&nbsp;</span>
+    <a href="https://wa.me/6285861731352" target="_blank" rel="noopener noreferrer"
+      style="color: var(--primary); text-decoration: none; font-weight: 500; transition: opacity 0.2s;"
+      onmouseover="this.style.opacity='0.7'" onmouseout="this.style.opacity='1'">
+      📱 +62 858-6173-1352
+    </a>
+  </footer>
 
 </body>
 

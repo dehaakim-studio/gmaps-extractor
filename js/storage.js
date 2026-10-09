@@ -48,6 +48,7 @@ function createLocationRecord(raw) {
     longitude: raw.longitude || raw.lng || '',
     status: raw.status || STATUS.VALID,
     tanggal: raw.tanggal || raw.date || new Date().toLocaleString('id-ID'),
+    timestamp: raw.timestamp || Date.now(),
   };
 }
 
@@ -75,12 +76,8 @@ function generateId() {
 function migrateRecord(item) {
   if (!item) return null;
 
-  // Jika sudah format baru (ada field 'id' dan 'nama_tempat')
-  if (item.id && item.nama_tempat !== undefined) return item;
-
-  // Migrasikan dari format lama
   return {
-    id: generateId(),
+    id: item.id || generateId(),
     nama_tempat: item.nama_tempat || item.name || 'Tidak ditemukan',
     kategori: item.kategori || '',
     kecamatan: item.kecamatan || '',
@@ -90,6 +87,7 @@ function migrateRecord(item) {
     longitude: item.longitude || item.lng || '',
     status: item.status || STATUS.VALID,
     tanggal: item.tanggal || item.date || '-',
+    timestamp: item.timestamp || Date.now(),
   };
 }
 
@@ -143,7 +141,23 @@ function loadFromStorage(key) {
 function loadTableData() {
   const raw = loadFromStorage(STORAGE_KEYS.TABLE_DATA);
   if (!Array.isArray(raw)) return [];
-  return raw.map(migrateRecord).filter(Boolean);
+  
+  const now = Date.now();
+  const TWENTY_FOUR_HOURS = 24 * 60 * 60 * 1000;
+  
+  const migrated = raw.map(migrateRecord).filter(Boolean);
+  
+  // Hanya simpan data yang umurnya kurang dari 24 jam
+  const validData = migrated.filter(item => {
+    return (now - item.timestamp) < TWENTY_FOUR_HOURS;
+  });
+
+  // Jika ada data yang terhapus karena kedaluwarsa, simpan ulang ke storage
+  if (validData.length < migrated.length) {
+    saveToStorage(STORAGE_KEYS.TABLE_DATA, validData);
+  }
+
+  return validData;
 }
 
 /**

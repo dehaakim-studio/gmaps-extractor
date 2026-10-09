@@ -72,10 +72,11 @@ body {
   background-attachment: fixed;
   color: var(--text-main);
   display: flex;
-  justify-content: center;
-  align-items: flex-start;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
   min-height: 100vh;
-  padding: 20px;
+  padding: 20px 20px 0;
   transition: background-color 0.4s ease, color 0.4s ease, background-image 0.4s ease;
   animation: auroraMove 15s ease infinite alternate;
 }
@@ -98,7 +99,8 @@ body {
   max-width: 1400px;
   align-items: stretch;
   margin: 0 auto;
-  height: calc(100vh - 40px);
+  flex: 1;
+  height: calc(100vh - 80px);
 }
 
 .container,
