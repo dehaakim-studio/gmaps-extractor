@@ -363,32 +363,146 @@ function switchTab(tab) {
 }
 
 // ─────────────────────────────────────────────
-// EXPORT WRAPPERS
+// EXPORT WRAPPERS — pakai Save As dialog (File System Access API)
 // ─────────────────────────────────────────────
 
-function handleExportExcel() {
-  const defaultName = `Data_Maps_Export_${new Date().toISOString().slice(0, 10)}`;
-  const filename = prompt('Masukkan nama file Excel:', defaultName);
-  if (!filename || filename.trim() === '') return; // Batal atau kosong
-  const result = exportToExcel(tableData, filename.trim());
-  showToast(result.message, result.success ? 'success' : 'error');
+/**
+ * Helper: tampilkan dialog Save As dan tulis blob ke file yang dipilih user.
+ * Fallback ke triggerDownload jika browser tidak support showSaveFilePicker.
+ * @param {Blob} blob - Isi file
+ * @param {string} suggestedName - Nama file default
+ * @param {Array} types - Array filter tipe file untuk dialog
+ */
+async function saveWithDialog(blob, suggestedName, types) {
+  if (window.showSaveFilePicker) {
+    try {
+      const handle = await window.showSaveFilePicker({
+        suggestedName,
+        types,
+      });
+      const writable = await handle.createWritable();
+      await writable.write(blob);
+      await writable.close();
+      return { success: true };
+    } catch (err) {
+      if (err.name === 'AbortError') return { success: false, aborted: true };
+      console.warn('[saveWithDialog] fallback ke download:', err);
+    }
+  }
+  // Fallback: download otomatis
+  const url = URL.createObjectURL(blob);
+  triggerDownload(url, suggestedName);
+  setTimeout(() => URL.revokeObjectURL(url), 5000);
+  return { success: true };
 }
 
-function handleExportGeoJSON(target) {
+async function handleExportExcel() {
+  if (!tableData || tableData.length === 0) {
+    showToast('Data masih kosong!', 'error'); return;
+  }
+  const defaultName = `Data_Maps_current_${new Date().toISOString().slice(0, 10)}.xlsx`;
+  try {
+    // Build workbook pakai SheetJS, hasilkan ArrayBuffer
+    const saved = localStorage.getItem('app-settings');
+    let settings = { showKategori: true, showKecamatan: true, showLink: true };
+    if (saved) { try { settings = { ...settings, ...JSON.parse(saved) }; } catch (e) {} }
+
+    const headers = ['No', 'Nama Tempat'];
+    if (settings.showKategori) headers.push('Kategori');
+    if (settings.showKecamatan) headers.push('Kecamatan');
+    headers.push('Alamat Lengkap');
+    if (settings.showLink !== false) headers.push('Link Google Maps');
+    headers.push('Latitude', 'Longitude', 'Status', 'Tanggal');
+
+    const wsData = [headers];
+    tableData.forEach((row, idx) => {
+      const rowData = [idx + 1, safeStr(row.nama_tempat || row.name)];
+      if (settings.showKategori) rowData.push(safeStr(row.kategori));
+      if (settings.showKecamatan) rowData.push(safeStr(row.kecamatan));
+      rowData.push(safeStr(row.alamat || row.address));
+      if (settings.showLink !== false) rowData.push(safeStr(row.link_google_maps || row.link));
+      rowData.push(safeStr(row.latitude || row.lat), safeStr(row.longitude || row.lng), safeStr(row.status || STATUS.VALID), safeStr(row.tanggal || row.date));
+      wsData.push(rowData);
+    });
+
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.aoa_to_sheet(wsData);
+    XLSX.utils.book_append_sheet(wb, ws, 'Data Maps');
+    const buf = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+    const blob = new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+
+    const res = await saveWithDialog(blob, defaultName, [{
+      description: 'Excel Workbook',
+      accept: { 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx'] },
+    }]);
+    if (!res.aborted) showToast(res.success ? 'Berhasil export ke Excel!' : 'Gagal export ke Excel.', res.success ? 'success' : 'error');
+  } catch (err) {
+    console.error('[export] Excel error:', err);
+    showToast('Gagal export ke Excel.', 'error');
+  }
+}
+
+async function handleExportGeoJSON(target) {
   const data = target === 'archive' ? archiveData : tableData;
-  const result = exportToGeoJSON(data, target);
-  showToast(result.message, result.success ? 'success' : 'error');
+  if (!data || data.length === 0) { showToast('Data masih kosong!', 'error'); return; }
+  const dateStr = new Date().toISOString().slice(0, 10);
+  const defaultName = `Data_Maps_${target || 'export'}_${dateStr}.geojson`;
+  try {
+    const features = data
+      .filter(row => { const la = parseFloat(row.latitude || row.lat), lo = parseFloat(row.longitude || row.lng); return !isNaN(la) && !isNaN(lo); })
+      .map(row => ({ type: 'Feature', geometry: { type: 'Point', coordinates: [parseFloat(row.longitude || row.lng), parseFloat(row.latitude || row.lat)] }, properties: { nama_tempat: safeStr(row.nama_tempat || row.name), kategori: safeStr(row.kategori), kecamatan: safeStr(row.kecamatan), alamat: safeStr(row.alamat || row.address), link_google_maps: safeStr(row.link_google_maps || row.link), status: safeStr(row.status || STATUS.VALID), tanggal: safeStr(row.tanggal || row.date) } }));
+    const geojson = { type: 'FeatureCollection', features };
+    const blob = new Blob([JSON.stringify(geojson, null, 2)], { type: 'application/geo+json' });
+    const res = await saveWithDialog(blob, defaultName, [{ description: 'GeoJSON File', accept: { 'application/geo+json': ['.geojson', '.json'] } }]);
+    if (!res.aborted) showToast(res.success ? 'Berhasil export ke GeoJSON!' : 'Gagal export ke GeoJSON.', res.success ? 'success' : 'error');
+  } catch (err) {
+    console.error('[export] GeoJSON error:', err);
+    showToast('Gagal export ke GeoJSON.', 'error');
+  }
 }
 
-function handleExportKML(target) {
+async function handleExportKML(target) {
   const data = target === 'archive' ? archiveData : tableData;
-  const result = exportToKML(data, target);
-  showToast(result.message, result.success ? 'success' : 'error');
+  if (!data || data.length === 0) { showToast('Data masih kosong!', 'error'); return; }
+  const dateStr = new Date().toISOString().slice(0, 10);
+  const defaultName = `Data_Maps_${target || 'export'}_${dateStr}.kml`;
+  try {
+    let kml = `<?xml version="1.0" encoding="UTF-8"?>\n<kml xmlns="http://www.opengis.net/kml/2.2">\n  <Document>\n    <name>Data Maps ${target || 'export'}</name>\n`;
+    data.forEach(row => {
+      const lat = parseFloat(row.latitude || row.lat), lng = parseFloat(row.longitude || row.lng);
+      if (isNaN(lat) || isNaN(lng)) return;
+      kml += `    <Placemark>\n      <name>${escapeXML(row.nama_tempat || row.name || 'Tanpa Nama')}</name>\n      <description><![CDATA[\n        <b>Alamat:</b> ${safeStr(row.alamat || row.address)}<br/>\n        <b>Kategori:</b> ${safeStr(row.kategori) || '-'}<br/>\n        <b>Kecamatan:</b> ${safeStr(row.kecamatan) || '-'}<br/>\n        <b>Status:</b> ${safeStr(row.status || STATUS.VALID)}<br/>\n        <b>Link:</b> <a href="${safeStr(row.link_google_maps || row.link)}">${safeStr(row.link_google_maps || row.link)}</a>\n      ]]></description>\n      <Point>\n        <coordinates>${lng},${lat},0</coordinates>\n      </Point>\n    </Placemark>\n`;
+    });
+    kml += `  </Document>\n</kml>`;
+    const blob = new Blob([kml], { type: 'application/vnd.google-earth.kml+xml' });
+    const res = await saveWithDialog(blob, defaultName, [{ description: 'KML File', accept: { 'application/vnd.google-earth.kml+xml': ['.kml'] } }]);
+    if (!res.aborted) showToast(res.success ? 'Berhasil export ke KML!' : 'Gagal export ke KML.', res.success ? 'success' : 'error');
+  } catch (err) {
+    console.error('[export] KML error:', err);
+    showToast('Gagal export ke KML.', 'error');
+  }
 }
 
-function handleExportArchiveExcel() {
-  const result = exportArchiveToExcel(archiveData);
-  showToast(result.message, result.success ? 'success' : 'error');
+async function handleExportArchiveExcel() {
+  if (!archiveData || archiveData.length === 0) { showToast('Arsip masih kosong!', 'error'); return; }
+  const defaultName = `Arsip_Maps_${new Date().toISOString().slice(0, 10)}.xlsx`;
+  try {
+    const wb = XLSX.utils.book_new();
+    const headers = ['No', 'Nama Tempat', 'Kategori', 'Kecamatan', 'Alamat Lengkap', 'Link Google Maps', 'Latitude', 'Longitude', 'Status', 'Tanggal'];
+    const wsData = [headers];
+    archiveData.forEach((row, idx) => {
+      wsData.push([idx + 1, safeStr(row.nama_tempat || row.name), safeStr(row.kategori), safeStr(row.kecamatan), safeStr(row.alamat || row.address), safeStr(row.link_google_maps || row.link), safeStr(row.latitude || row.lat), safeStr(row.longitude || row.lng), safeStr(row.status || STATUS.VALID), safeStr(row.tanggal || row.date)]);
+    });
+    const ws = XLSX.utils.aoa_to_sheet(wsData);
+    XLSX.utils.book_append_sheet(wb, ws, 'Arsip Maps');
+    const buf = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+    const blob = new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    const res = await saveWithDialog(blob, defaultName, [{ description: 'Excel Workbook', accept: { 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx'] } }]);
+    if (!res.aborted) showToast(res.success ? 'Berhasil export Arsip ke Excel!' : 'Gagal export Arsip ke Excel.', res.success ? 'success' : 'error');
+  } catch (err) {
+    console.error('[export] Archive Excel error:', err);
+    showToast('Gagal export Arsip ke Excel.', 'error');
+  }
 }
 
 function handleConvertExcelToKML(event) {
