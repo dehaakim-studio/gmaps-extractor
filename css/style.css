@@ -771,12 +771,18 @@ body.hide-col-link .col-link {
   background-color: var(--card-bg);
   min-width: 160px;
   box-shadow: var(--glass-shadow);
-  z-index: 100;
+  z-index: 1000;
   border-radius: 8px;
   overflow: hidden;
   border: 1px solid var(--border-color);
   backdrop-filter: var(--glass-blur);
-  margin-top: 5px;
+  top: 100%;
+  left: 0;
+  padding-top: 4px;
+}
+
+.dropdown-content.open {
+  display: block;
 }
 
 .dropdown-content a {
@@ -793,6 +799,4 @@ body.hide-col-link .col-link {
   color: var(--primary);
 }
 
-.dropdown:hover .dropdown-content {
-  display: block;
-}
+/* dropdown sekarang dikontrol via JS class .open, bukan hover */

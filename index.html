@@ -464,6 +464,40 @@
     </a>
   </footer>
 
+  <!-- Dropdown click-toggle (menggantikan :hover agar tidak ngilang) -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      // Toggle dropdown saat tombol diklik
+      document.querySelectorAll('.dropbtn').forEach(function (btn) {
+        btn.addEventListener('click', function (e) {
+          e.stopPropagation();
+          var content = btn.nextElementSibling;
+          var isOpen = content.classList.contains('open');
+          // Tutup semua dropdown dulu
+          document.querySelectorAll('.dropdown-content').forEach(function (el) {
+            el.classList.remove('open');
+          });
+          // Buka yang diklik (jika sebelumnya tertutup)
+          if (!isOpen) content.classList.add('open');
+        });
+      });
+
+      // Klik di luar dropdown → tutup semua
+      document.addEventListener('click', function () {
+        document.querySelectorAll('.dropdown-content').forEach(function (el) {
+          el.classList.remove('open');
+        });
+      });
+
+      // Klik di dalam dropdown-content jangan propagate tutup
+      document.querySelectorAll('.dropdown-content').forEach(function (el) {
+        el.addEventListener('click', function (e) {
+          e.stopPropagation();
+        });
+      });
+    });
+  </script>
+
 </body>
 
 </html>

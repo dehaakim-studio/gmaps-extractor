@@ -73,22 +73,22 @@ function buildPopupContent(location) {
       : (statusVal.includes('FAILED') || statusVal.includes('INVALID') ? '#ef4444' : '#f59e0b'));
 
   return `
-    <div style="font-family: 'Outfit', sans-serif; font-size: 13px; color: #1e293b; min-width: 200px; max-width: 300px;">
-      <div style="font-size: 15px; font-weight: 700; color: #0f172a; margin-bottom: 8px; border-bottom: 2px solid #e2e8f0; padding-bottom: 6px;">
+    <div style="font-family: 'Outfit', sans-serif; font-size: 11px; color: #1e293b; min-width: 190px; max-width: 280px;">
+      <div style="font-size: 12.5px; font-weight: 700; color: #0f172a; margin-bottom: 6px; border-bottom: 2px solid #e2e8f0; padding-bottom: 5px;">
         📍 ${name}
       </div>
-      <div style="display: grid; gap: 4px;">
+      <div style="display: grid; gap: 3px;">
         <div><span style="color: #64748b; font-weight: 500;">Kategori:</span> ${kategori}</div>
         <div><span style="color: #64748b; font-weight: 500;">Kecamatan:</span> ${kecamatan}</div>
         <div><span style="color: #64748b; font-weight: 500;">Alamat:</span> ${address}</div>
         <div><span style="color: #64748b; font-weight: 500;">Latitude:</span> ${lat}</div>
         <div><span style="color: #64748b; font-weight: 500;">Longitude:</span> ${lng}</div>
         <div><span style="color: #64748b; font-weight: 500;">Tanggal:</span> ${tanggal}</div>
-        <div style="margin-top: 6px; display: flex; align-items: center; justify-content: space-between; border-top: 1px solid #e2e8f0; padding-top: 6px;">
-          <span style="background: ${statusColor}; color: white; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 700;">
+        <div style="margin-top: 5px; display: flex; align-items: center; justify-content: space-between; border-top: 1px solid #e2e8f0; padding-top: 5px;">
+          <span style="background: ${statusColor}; color: white; padding: 2px 7px; border-radius: 4px; font-size: 0.7rem; font-weight: 700;">
             ${statusVal}
           </span>
-          <a href="${link}" target="_blank" rel="noopener noreferrer" style="color: #0d9488; font-size: 0.8rem; font-weight: 600; text-decoration: none;">Buka Maps ↗</a>
+          <a href="${link}" target="_blank" rel="noopener noreferrer" style="color: #0d9488; font-size: 0.72rem; font-weight: 600; text-decoration: none;">Buka Maps ↗</a>
         </div>
       </div>
     </div>
