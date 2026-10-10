@@ -185,13 +185,14 @@
           style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
           
           <div class="dropdown">
-            <button class="btn-process dropbtn" style="padding: 8px 15px; font-size: 0.85rem; width: auto; background-color: #3b82f6; color: white;">
+            <button class="btn-process dropbtn" style="padding: 8px 15px; font-size: 0.85rem; width: auto; background-color: #3b82f6; color: white;"
+              onclick="toggleDropdown(event, this)">
               Export ▼
             </button>
             <div class="dropdown-content">
-              <a href="#" onclick="handleExportExcel(); return false;">Export Excel</a>
-              <a href="#" onclick="handleExportKML('current'); return false;">Export KML</a>
-              <a href="#" onclick="handleExportGeoJSON('current'); return false;">Export GeoJSON</a>
+              <button onclick="handleExportExcel(); closeAllDropdowns();">Export Excel</button>
+              <button onclick="handleExportKML('current'); closeAllDropdowns();">Export KML</button>
+              <button onclick="handleExportGeoJSON('current'); closeAllDropdowns();">Export GeoJSON</button>
             </div>
           </div>
 
@@ -217,13 +218,14 @@
           style="display: none; gap: 10px; align-items: center; flex-wrap: wrap;">
           
           <div class="dropdown">
-            <button class="btn-process dropbtn" style="padding: 8px 15px; font-size: 0.85rem; width: auto; background-color: #3b82f6; color: white;">
+            <button class="btn-process dropbtn" style="padding: 8px 15px; font-size: 0.85rem; width: auto; background-color: #3b82f6; color: white;"
+              onclick="toggleDropdown(event, this)">
               Export Arsip ▼
             </button>
             <div class="dropdown-content">
-              <a href="#" onclick="handleExportArchiveExcel(); return false;">Export Excel</a>
-              <a href="#" onclick="handleExportKML('archive'); return false;">Export KML</a>
-              <a href="#" onclick="handleExportGeoJSON('archive'); return false;">Export GeoJSON</a>
+              <button onclick="handleExportArchiveExcel(); closeAllDropdowns();">Export Excel</button>
+              <button onclick="handleExportKML('archive'); closeAllDropdowns();">Export KML</button>
+              <button onclick="handleExportGeoJSON('archive'); closeAllDropdowns();">Export GeoJSON</button>
             </div>
           </div>
 
@@ -464,37 +466,25 @@
     </a>
   </footer>
 
-  <!-- Dropdown click-toggle (menggantikan :hover agar tidak ngilang) -->
+  <!-- Dropdown click-toggle -->
   <script>
-    document.addEventListener('DOMContentLoaded', function () {
-      // Toggle dropdown saat tombol diklik
-      document.querySelectorAll('.dropbtn').forEach(function (btn) {
-        btn.addEventListener('click', function (e) {
-          e.stopPropagation();
-          var content = btn.nextElementSibling;
-          var isOpen = content.classList.contains('open');
-          // Tutup semua dropdown dulu
-          document.querySelectorAll('.dropdown-content').forEach(function (el) {
-            el.classList.remove('open');
-          });
-          // Buka yang diklik (jika sebelumnya tertutup)
-          if (!isOpen) content.classList.add('open');
-        });
-      });
+    function toggleDropdown(e, btn) {
+      e.stopPropagation();
+      var content = btn.nextElementSibling;
+      var isOpen = content.classList.contains('open');
+      closeAllDropdowns();
+      if (!isOpen) content.classList.add('open');
+    }
 
-      // Klik di luar dropdown → tutup semua
-      document.addEventListener('click', function () {
-        document.querySelectorAll('.dropdown-content').forEach(function (el) {
-          el.classList.remove('open');
-        });
-      });
-
-      // Klik di dalam dropdown-content jangan propagate tutup
+    function closeAllDropdowns() {
       document.querySelectorAll('.dropdown-content').forEach(function (el) {
-        el.addEventListener('click', function (e) {
-          e.stopPropagation();
-        });
+        el.classList.remove('open');
       });
+    }
+
+    // Klik di luar → tutup semua
+    document.addEventListener('click', function () {
+      closeAllDropdowns();
     });
   </script>
 
