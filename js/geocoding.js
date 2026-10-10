@@ -4,7 +4,7 @@
  *
  * Tanggung jawab:
  * - Melakukan reverse geocoding dari koordinat ke alamat
- * - Mendukung Google Maps API dan DistanceMatrix.ai API
+ * - Menggunakan DistanceMatrix.ai API
  * - Caching hasil geocoding ke LocalStorage
  * - Penanganan error, timeout, dan fallback
  * - Rate-limit awareness (delay antar request)
@@ -90,18 +90,13 @@ async function fetchWithTimeout(url, timeoutMs = GEOCODING_TIMEOUT_MS) {
 // ─────────────────────────────────────────────
 
 /**
- * Membangun URL endpoint geocoding berdasarkan tipe API Key.
- * - AIza... → Google Maps Geocoding API
- * - Lainnya → DistanceMatrix.ai API
+ * Membangun URL endpoint geocoding menggunakan DistanceMatrix.ai API.
  * @param {string} lat
  * @param {string} lng
  * @param {string} apiKey
  * @returns {string}
  */
 function buildGeocodeURL(lat, lng, apiKey) {
-  if (apiKey.startsWith('AIza')) {
-    return `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${apiKey}`;
-  }
   return `https://api.distancematrix.ai/maps/api/geocode/json?latlng=${lat},${lng}&key=${apiKey}`;
 }
 
@@ -115,7 +110,7 @@ function buildGeocodeURL(lat, lng, apiKey) {
  *
  * @param {string} lat - Latitude sebagai string
  * @param {string} lng - Longitude sebagai string
- * @param {string} apiKey - API Key (Google atau DistanceMatrix)
+ * @param {string} apiKey - API Key DistanceMatrix.ai
  * @returns {Promise<{ address: string, status: string, fromCache: boolean }>}
  *   - address: Alamat hasil geocoding
  *   - status: 'VALID' | 'GEOCODING_FAILED'
@@ -157,8 +152,12 @@ async function reverseGeocode(lat, lng, apiKey) {
     }
 
     if (geoData.status === 'REQUEST_DENIED') {
+      // Log detail dari API untuk membantu debugging
+      console.warn('[geocoding] REQUEST_DENIED - Detail dari API:', geoData);
+      const errorMsg = geoData.error_message || '';
+      console.warn('[geocoding] Kemungkinan penyebab: API key DistanceMatrix.ai tidak valid, expired, atau limit habis.');
       return {
-        address: 'API Key tidak valid atau limit tercapai.',
+        address: `Akses ditolak oleh DistanceMatrix.ai${errorMsg ? ': ' + errorMsg : '. Pastikan API key valid dan masih aktif di dashboard distancematrix.ai.'}`,
         status: STATUS.GEOCODING_FAILED,
         fromCache: false,
       };

@@ -386,11 +386,14 @@ function updateStats(activeData) {
   
   const incomplete = data.filter(d => typeof isDataComplete === 'function' && !isDataComplete(d)).length;
 
-  el('stat-total').textContent = total;
-  el('stat-valid').textContent = valid;
+  const totalEls = document.querySelectorAll('.stat-total-val');
+  totalEls.forEach(el => el.textContent = total);
+
+  el('stat-total') && (el('stat-total').textContent = total);
+  el('stat-valid') && (el('stat-valid').textContent = valid);
   el('stat-duplikat') && (el('stat-duplikat').textContent = duplikat);
-  el('stat-geofail').textContent = geoFail;
-  el('stat-invalid').textContent = invalid;
+  el('stat-geofail') && (el('stat-geofail').textContent = geoFail);
+  el('stat-invalid') && (el('stat-invalid').textContent = invalid);
   el('stat-incomplete') && (el('stat-incomplete').textContent = incomplete);
 
 
