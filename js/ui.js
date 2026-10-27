@@ -17,13 +17,54 @@
 'use strict';
 
 // ─────────────────────────────────────────────
-// KONSTANTA KATEGORI
+// DAFTAR KATEGORI (Dinamis, dapat diperbarui via Pengaturan)
 // ─────────────────────────────────────────────
 
-const KATEGORI_LIST = [
-  '', 'Masjid', 'Mushola', 'Sekolah', 'Kantor',
-  'Fasilitas Umum', 'Tempat Usaha', 'Lainnya',
-];
+const DEFAULT_KATEGORI = ['Masjid', 'Mushola', 'Sekolah', 'Kantor', 'Fasilitas Umum', 'Tempat Usaha', 'Lainnya'];
+
+let KATEGORI_LIST = ['', ...DEFAULT_KATEGORI];
+
+/**
+ * Memperbarui KATEGORI_LIST dari array kategori yang diberikan.
+ * Selalu menyertakan opsi kosong '' di indeks pertama.
+ * @param {string[]} newCategories
+ */
+function updateKategoriList(newCategories) {
+  if (!Array.isArray(newCategories) || newCategories.length === 0) {
+    KATEGORI_LIST = ['', ...DEFAULT_KATEGORI];
+  } else {
+    KATEGORI_LIST = ['', ...newCategories];
+  }
+  // Perbarui dropdown filter kategori di toolbar
+  refreshKategoriFilterDropdown();
+}
+
+/**
+ * Memperbarui opsi pada select#filterKategori di toolbar
+ * agar sesuai dengan KATEGORI_LIST yang aktif.
+ */
+function refreshKategoriFilterDropdown() {
+  const filterEl = document.getElementById('filterKategori');
+  if (!filterEl) return;
+  const currentVal = filterEl.value;
+  // Kosongkan opsi lama kecuali 'ALL'
+  while (filterEl.options.length > 1) {
+    filterEl.remove(1);
+  }
+  // Isi ulang dari KATEGORI_LIST (skip opsi kosong '')
+  KATEGORI_LIST.filter(k => k !== '').forEach(k => {
+    const opt = document.createElement('option');
+    opt.value = k;
+    opt.textContent = k;
+    filterEl.appendChild(opt);
+  });
+  // Pertahankan nilai yang dipilih sebelumnya jika masih ada
+  if ([...filterEl.options].some(o => o.value === currentVal)) {
+    filterEl.value = currentVal;
+  } else {
+    filterEl.value = 'ALL';
+  }
+}
 
 /**
  * Update kategori pada suatu baris data.

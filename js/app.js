@@ -633,16 +633,22 @@ function closeSettingsModal() {
 }
 
 function loadSettings() {
+  const defaultCategories = typeof DEFAULT_KATEGORI !== 'undefined' ? DEFAULT_KATEGORI : ['Masjid', 'Mushola', 'Sekolah', 'Kantor', 'Fasilitas Umum', 'Tempat Usaha', 'Lainnya'];
   const defaultSettings = {
     showKategori: true,
     showKecamatan: true,
-    showLink: true
+    showLink: true,
+    categories: defaultCategories
   };
   const saved = localStorage.getItem('app-settings');
   let settings = defaultSettings;
   if (saved) {
     try {
       settings = { ...defaultSettings, ...JSON.parse(saved) };
+      // Pastikan categories selalu berupa array
+      if (!Array.isArray(settings.categories) || settings.categories.length === 0) {
+        settings.categories = defaultCategories;
+      }
     } catch (e) {
       console.error('Failed to parse settings', e);
     }
@@ -656,6 +662,17 @@ function loadSettings() {
   if (cbKategori) cbKategori.checked = settings.showKategori;
   if (cbKecamatan) cbKecamatan.checked = settings.showKecamatan;
   if (cbLink) cbLink.checked = settings.showLink;
+
+  // Isi textarea kategori custom
+  const taCategories = document.getElementById('setting-categories-text');
+  if (taCategories) {
+    taCategories.value = settings.categories.join(', ');
+  }
+
+  // Update daftar dropdown kategori di tabel
+  if (typeof updateKategoriList === 'function') {
+    updateKategoriList(settings.categories);
+  }
   
   applySettingsToUI(settings);
 }
@@ -684,14 +701,36 @@ function saveCurrentSettingsFromUI(showToastMsg = false) {
   const cbKategori = document.getElementById('setting-show-kategori');
   const cbKecamatan = document.getElementById('setting-show-kecamatan');
   const cbLink = document.getElementById('setting-show-link');
+  const taCategories = document.getElementById('setting-categories-text');
+
+  // Baca & bersihkan daftar kategori dari textarea
+  const defaultCategories = typeof DEFAULT_KATEGORI !== 'undefined' ? DEFAULT_KATEGORI : ['Masjid', 'Mushola', 'Sekolah', 'Kantor', 'Fasilitas Umum', 'Tempat Usaha', 'Lainnya'];
+  let categories = defaultCategories;
+  if (taCategories && taCategories.value.trim() !== '') {
+    categories = taCategories.value
+      .split(',')
+      .map(s => s.trim())
+      .filter(s => s.length > 0);
+    if (categories.length === 0) categories = defaultCategories;
+  }
   
   const settings = {
     showKategori: cbKategori ? cbKategori.checked : true,
     showKecamatan: cbKecamatan ? cbKecamatan.checked : true,
-    showLink: cbLink ? cbLink.checked : true
+    showLink: cbLink ? cbLink.checked : true,
+    categories: categories
   };
   
   localStorage.setItem('app-settings', JSON.stringify(settings));
+
+  // Update daftar dropdown kategori di tabel secara langsung
+  if (typeof updateKategoriList === 'function') {
+    updateKategoriList(categories);
+  }
+
+  // Re-render tabel agar dropdown langsung berubah
+  if (typeof refreshUI === 'function') refreshUI();
+
   applySettingsToUI(settings);
   
   if (showToastMsg && typeof showToast === 'function') {
@@ -704,9 +743,12 @@ function resetDefaultSettings() {
   const cbKategori = document.getElementById('setting-show-kategori');
   const cbKecamatan = document.getElementById('setting-show-kecamatan');
   const cbLink = document.getElementById('setting-show-link');
+  const taCategories = document.getElementById('setting-categories-text');
+  const defaultCategories = typeof DEFAULT_KATEGORI !== 'undefined' ? DEFAULT_KATEGORI : ['Masjid', 'Mushola', 'Sekolah', 'Kantor', 'Fasilitas Umum', 'Tempat Usaha', 'Lainnya'];
   if (cbKategori) cbKategori.checked = true;
   if (cbKecamatan) cbKecamatan.checked = true;
   if (cbLink) cbLink.checked = true;
+  if (taCategories) taCategories.value = defaultCategories.join(', ');
   saveCurrentSettingsFromUI(true);
 }
 
