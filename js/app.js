@@ -632,6 +632,89 @@ function closeSettingsModal() {
   }
 }
 
+// ─────────────────────────────────────────────
+// TAG MANAGEMENT — Kategori Custom
+// ─────────────────────────────────────────────
+
+/**
+ * Render ulang semua tag chip di dalam wrapper.
+ * @param {string[]} categories
+ */
+function renderKategoriTags(categories) {
+  const wrapper = document.getElementById('kategori-tags-wrapper');
+  if (!wrapper) return;
+  // Hapus semua tag lama (bukan input-nya)
+  wrapper.querySelectorAll('.kategori-tag').forEach(el => el.remove());
+  const input = document.getElementById('kategori-new-input');
+  categories.forEach(name => {
+    if (!name) return;
+    const chip = document.createElement('span');
+    chip.className = 'kategori-tag';
+    chip.innerHTML = `${escapeHTML(name)}<button type="button" title="Hapus" onclick="removeKategoriTag('${name.replace(/'/g, "\\'")}')">&#x2715;</button>`;
+    wrapper.insertBefore(chip, input);
+  });
+}
+
+/**
+ * Menambah satu tag baru (jika belum ada & tidak kosong).
+ * @param {string} name
+ */
+function addKategoriTag(name) {
+  const trimmed = name.trim();
+  if (!trimmed) return;
+  const current = getKategoriTags();
+  if (current.map(s => s.toLowerCase()).includes(trimmed.toLowerCase())) return; // cegah duplikat
+  current.push(trimmed);
+  renderKategoriTags(current);
+}
+
+/**
+ * Menghapus satu tag berdasarkan nama.
+ * @param {string} name
+ */
+function removeKategoriTag(name) {
+  const current = getKategoriTags().filter(s => s !== name);
+  renderKategoriTags(current);
+}
+
+/**
+ * Mengambil array kategori dari tag chip yang saat ini tampil.
+ * @returns {string[]}
+ */
+function getKategoriTags() {
+  const wrapper = document.getElementById('kategori-tags-wrapper');
+  if (!wrapper) return [];
+  return [...wrapper.querySelectorAll('.kategori-tag')]
+    .map(el => el.childNodes[0].textContent.trim())
+    .filter(s => s.length > 0);
+}
+
+/**
+ * Set daftar tag dari array (render ulang semua).
+ * @param {string[]} arr
+ */
+function setKategoriTags(arr) {
+  renderKategoriTags(Array.isArray(arr) ? arr : []);
+}
+
+/**
+ * Handler keydown pada input kategori baru.
+ * Tekan Enter → tambah tag, tekan Backspace saat kosong → hapus tag terakhir.
+ */
+function handleKategoriInputKey(event) {
+  const input = event.target;
+  if (event.key === 'Enter') {
+    event.preventDefault();
+    addKategoriTag(input.value);
+    input.value = '';
+  } else if (event.key === 'Backspace' && input.value === '') {
+    const current = getKategoriTags();
+    if (current.length > 0) {
+      removeKategoriTag(current[current.length - 1]);
+    }
+  }
+}
+
 function loadSettings() {
   const defaultCategories = typeof DEFAULT_KATEGORI !== 'undefined' ? DEFAULT_KATEGORI : ['Masjid', 'Mushola', 'Sekolah', 'Kantor', 'Fasilitas Umum', 'Tempat Usaha', 'Lainnya'];
   const defaultSettings = {
@@ -645,7 +728,6 @@ function loadSettings() {
   if (saved) {
     try {
       settings = { ...defaultSettings, ...JSON.parse(saved) };
-      // Pastikan categories selalu berupa array
       if (!Array.isArray(settings.categories) || settings.categories.length === 0) {
         settings.categories = defaultCategories;
       }
@@ -663,11 +745,8 @@ function loadSettings() {
   if (cbKecamatan) cbKecamatan.checked = settings.showKecamatan;
   if (cbLink) cbLink.checked = settings.showLink;
 
-  // Isi textarea kategori custom
-  const taCategories = document.getElementById('setting-categories-text');
-  if (taCategories) {
-    taCategories.value = settings.categories.join(', ');
-  }
+  // Render tag chips dari kategori tersimpan
+  setKategoriTags(settings.categories);
 
   // Update daftar dropdown kategori di tabel
   if (typeof updateKategoriList === 'function') {
@@ -701,18 +780,11 @@ function saveCurrentSettingsFromUI(showToastMsg = false) {
   const cbKategori = document.getElementById('setting-show-kategori');
   const cbKecamatan = document.getElementById('setting-show-kecamatan');
   const cbLink = document.getElementById('setting-show-link');
-  const taCategories = document.getElementById('setting-categories-text');
 
-  // Baca & bersihkan daftar kategori dari textarea
+  // Baca kategori dari tag chips yang tampil
   const defaultCategories = typeof DEFAULT_KATEGORI !== 'undefined' ? DEFAULT_KATEGORI : ['Masjid', 'Mushola', 'Sekolah', 'Kantor', 'Fasilitas Umum', 'Tempat Usaha', 'Lainnya'];
-  let categories = defaultCategories;
-  if (taCategories && taCategories.value.trim() !== '') {
-    categories = taCategories.value
-      .split(',')
-      .map(s => s.trim())
-      .filter(s => s.length > 0);
-    if (categories.length === 0) categories = defaultCategories;
-  }
+  let categories = getKategoriTags();
+  if (categories.length === 0) categories = defaultCategories;
   
   const settings = {
     showKategori: cbKategori ? cbKategori.checked : true,
@@ -728,7 +800,7 @@ function saveCurrentSettingsFromUI(showToastMsg = false) {
     updateKategoriList(categories);
   }
 
-  // Re-render tabel agar dropdown langsung berubah
+  // Re-render tabel agar dropdown tiap baris ikut berubah
   if (typeof refreshUI === 'function') refreshUI();
 
   applySettingsToUI(settings);
@@ -743,12 +815,11 @@ function resetDefaultSettings() {
   const cbKategori = document.getElementById('setting-show-kategori');
   const cbKecamatan = document.getElementById('setting-show-kecamatan');
   const cbLink = document.getElementById('setting-show-link');
-  const taCategories = document.getElementById('setting-categories-text');
   const defaultCategories = typeof DEFAULT_KATEGORI !== 'undefined' ? DEFAULT_KATEGORI : ['Masjid', 'Mushola', 'Sekolah', 'Kantor', 'Fasilitas Umum', 'Tempat Usaha', 'Lainnya'];
   if (cbKategori) cbKategori.checked = true;
   if (cbKecamatan) cbKecamatan.checked = true;
   if (cbLink) cbLink.checked = true;
-  if (taCategories) taCategories.value = defaultCategories.join(', ');
+  setKategoriTags(defaultCategories);
   saveCurrentSettingsFromUI(true);
 }
 

@@ -808,3 +808,87 @@ body.hide-col-link .col-link {
 }
 
 /* dropdown sekarang dikontrol via JS class .open, bukan hover */
+
+/* ─────────────────────────────────────────────
+   TAG INPUT — Kelola Kategori Custom
+───────────────────────────────────────────── */
+
+#kategori-tags-wrapper {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  align-items: center;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-color);
+  min-height: 48px;
+  cursor: text;
+  margin-bottom: 15px;
+  transition: border-color 0.2s ease;
+}
+
+#kategori-tags-wrapper:focus-within {
+  border-color: var(--border-focus);
+  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.15);
+}
+
+.kategori-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid rgba(16, 185, 129, 0.4);
+  color: var(--primary);
+  font-size: 0.82rem;
+  font-weight: 500;
+  padding: 3px 10px 3px 12px;
+  border-radius: 999px;
+  white-space: nowrap;
+  animation: tagPop 0.18s ease;
+}
+
+@keyframes tagPop {
+  from { transform: scale(0.75); opacity: 0; }
+  to   { transform: scale(1);    opacity: 1; }
+}
+
+.kategori-tag button {
+  background: none;
+  border: none;
+  color: var(--primary);
+  cursor: pointer;
+  font-size: 1rem;
+  line-height: 1;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.6;
+  transition: opacity 0.15s ease, color 0.15s ease;
+  border-radius: 50%;
+  width: 16px;
+  height: 16px;
+}
+
+.kategori-tag button:hover {
+  opacity: 1;
+  color: #ef4444;
+}
+
+#kategori-new-input {
+  border: none;
+  outline: none;
+  background: transparent;
+  color: var(--text-main);
+  font-size: 0.88rem;
+  font-family: inherit;
+  flex: 1;
+  min-width: 140px;
+  padding: 2px 4px;
+}
+
+#kategori-new-input::placeholder {
+  color: var(--text-muted);
+  font-style: italic;
+}
